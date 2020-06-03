@@ -1,9 +1,9 @@
 # PlexusNet
 PlexusNet for medical imaging
 
-#This package easily allows using PlexusNet architecture in research project.
+@This package easily allows using PlexusNet architecture in research project.
 
-#To Install: pip3 install git+https://github.com/oeminaga/PlexusNet.git
+@To Install: pip3 install git+https://github.com/oeminaga/PlexusNet.git
 
 #An example code to use the package: from PlexusNet.architecture import PlexusNet model=PlexusNet(depth=2, length=3, junction=3, n_class=2) model_.compile(optimizer=optimizer, metrics=["acc"], loss="categorical_crossentropy") modle.fit(X,Y)
 
