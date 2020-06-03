@@ -9,7 +9,7 @@ PlexusNet for medical imaging.
 
 from PlexusNet.architecture import PlexusNet <br />
 model=PlexusNet(depth=2, length=3, junction=3, n_class=2) <br />
-model.compile(optimizer=optimizer, metrics=["acc"], loss="categorical_crossentropy") <br />
+model.compile(optimizer="adam", metrics=["acc"], loss="categorical_crossentropy") <br />
 model.fit(X,Y)<br />
 
 #if you want to load a model:
