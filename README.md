@@ -1,7 +1,7 @@
 # PlexusNet
-PlexusNet for medical imaging
+PlexusNet for medical imaging.
 
-@This package easily allows using PlexusNet architecture in research project.
+@This package was built on the Keras framework and easily allows using PlexusNet architecture in research projects.
 
 @To Install: pip3 install git+https://github.com/oeminaga/PlexusNet.git
 
