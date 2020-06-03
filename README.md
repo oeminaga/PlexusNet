@@ -15,7 +15,7 @@ model.fit(X,Y)<br />
 #if you want to load a PlexusNet model:
 
 from PlexusNet.architecture import LoadModel<br />
-model=LoadModel("your_model.h5)<br />
+model=LoadModel("your_model.h5")<br />
 model.predict(X)<br />
 
 __________
