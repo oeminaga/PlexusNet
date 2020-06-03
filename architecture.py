@@ -1,3 +1,6 @@
+"""
+Copyright by Okyaz Eminaga. 2020
+"""
 from keras import layers, models,optimizers
 from keras.layers.advanced_activations import LeakyReLU
 import keras.backend as K

@@ -1,3 +1,6 @@
+"""
+Copyright by Okyaz Eminaga. 2020
+"""
 from keras.engine.topology import Layer
 from keras.constraints import min_max_norm
 import keras.backend as K
@@ -26,7 +29,6 @@ class RotationThetaWeightLayer(Layer): # a scaled layer
         a, b = x
 
         return K.cos(self.W1*90) * (-2) * K.exp(-(a**2+b**2)) + K.sin(self.W2*90) * (-2) * b * K.exp(-(a**2+b**2))
-
 class JunctionWeightLayer(Layer): # a junction layer
     def __init__(self,  **kwargs):
         self.func_junction = layers.add

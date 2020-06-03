@@ -1,5 +1,5 @@
 """
-Copyright by Okyaz Eminaga.
+Copyright by Okyaz Eminaga. 2020
 """
 import random
 import os
