@@ -12,7 +12,7 @@ model=PlexusNet(depth=2, length=3, junction=3, n_class=2) <br />
 model.compile(optimizer="adam", metrics=["acc"], loss="categorical_crossentropy") <br />
 model.fit(X,Y)<br />
 
-#if you want to load a model:
+#if you want to load a PlexusNet model:
 
 from PlexusNet.architecture import LoadModel<br />
 model=LoadModel("your_model.h5)<br />
