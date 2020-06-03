@@ -18,3 +18,8 @@ model=LoadModel("your_model.h5)
 model.predict(X)
 
 Please be aware that the architecture and the formula for color intensity normalization are patented and only provided for review and academic research purposes. The use for other purposes not listed here is not allowed without the permission of the author. Replication, modification or reuse of the software or the template are not allowed without the permission of the author.
+
+#Please cite:
+Eminaga O, Abbas M, Kunder C, Loening AM, Shen J, Brooks JD, Langlotz CP, Rubin DL. Plexus Convolutional Neural Network (PlexusNet): A novel neural network architecture for histologic image analysis. arXiv preprint arXiv:1908.09067. 2019 Aug 24.
+
+https://arxiv.org/abs/1908.09067
