@@ -1,6 +1,6 @@
 from setuptools import setup
 from setuptools import find_packages
-setup(name='PlexusNet',
+setup(name='plexusnet',
 version='0.1',
 description='PlexusNet for medical image analysis',
 url='https://github.com/oeminaga/PlexusNet.git',
