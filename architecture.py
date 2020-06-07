@@ -9,11 +9,11 @@ from keras import regularizers, initializers
 from keras.regularizers import l2
 import random
 import os
-import utils
+import .utils
 from keras.models import load_model
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D,GlobalAveragePooling2D,Activation, Dropout, Dense, GlobalMaxPooling2D
-from functions import *
+from .functions import *
 
 def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="categorical_crossentropy"):
     custom_objects_internal = {'JunctionWeightLayer':utils.JunctionWeightLayer, 'RotationThetaWeightLayer': utils.RotationThetaWeightLayer}
