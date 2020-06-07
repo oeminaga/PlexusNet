@@ -9,7 +9,7 @@ from keras import regularizers, initializers
 from keras.regularizers import l2
 import random
 import os
-import .utils
+import .utils as utils
 from keras.models import load_model
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D,GlobalAveragePooling2D,Activation, Dropout, Dense, GlobalMaxPooling2D
