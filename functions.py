@@ -9,7 +9,7 @@ import keras.backend as K
 from keras.constraints import min_max_norm
 from keras import regularizers, initializers
 from keras.regularizers import l2
-import utils
+import .utils as utils
 from keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D,GlobalAveragePooling2D,Activation, Dropout, Dense, GlobalMaxPooling2D
 
 def ColorIntensityNormalisationSection(x):
