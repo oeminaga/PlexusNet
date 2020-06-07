@@ -48,7 +48,6 @@ class PlexusNet():
         self.random_junctions =random_junctions
         self.normalize_by_factor=normalize_by_factor
         self.type_of_block =type_of_block
-    def Model(self):
         shape_default  = (self.input_shape[0], self.input_shape[1], self.number_input_channel)
         x = layers.Input(shape=shape_default)
         x_y_o = layers.Lambda(lambda x: x*self.normalize_by_factor)(x)
@@ -58,8 +57,8 @@ class PlexusNet():
         #Generate multiple channels from the image
         x_y = Conv2DBNSLU(x_y_o, filters= 32, kernel_size=(5, 5), strides=2, activation='relu', padding='same')
         y = self.Core(x_y, initial_filter = self.initial_filter, length=self.length, depth=self.depth, number_of_junctions=self.junction, compression=self.compression_rate, type_of_block=self.type_of_block)
-        convnet_model = models.Model(inputs=x, outputs=y)
-        return convnet_model
+        self.model = models.Model(inputs=x, outputs=y)
+        return self.model
     
     def _conv_block(self, x, initial_filter, reduction_channel_ratio=0.5, kernel_regularizer=None, seed=0, type_of_block="inception", stage=0, initial_image=None):
         """
@@ -206,7 +205,6 @@ class PlexusNet():
             np_ = np_[indexes_selected]
             print(np_.shape)
         return np_
-
     def Core(self, x, initial_filter=32, compression=0.5, length=5, depth=7, center_node_id=0, kernel_regularizer=None,random_junctions=True, number_of_junctions=5, junction_only_the_last_layers=False, type_of_block="inception", initial_image=None):
         nodes = []
 
