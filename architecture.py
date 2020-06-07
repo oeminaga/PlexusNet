@@ -58,7 +58,6 @@ class PlexusNet():
         x_y = Conv2DBNSLU(x_y_o, filters= 32, kernel_size=(5, 5), strides=2, activation='relu', padding='same')
         y = self.Core(x_y, initial_filter = self.initial_filter, length=self.length, depth=self.depth, number_of_junctions=self.junction, compression=self.compression_rate, type_of_block=self.type_of_block)
         self.model = models.Model(inputs=x, outputs=y)
-        return self.model
     
     def _conv_block(self, x, initial_filter, reduction_channel_ratio=0.5, kernel_regularizer=None, seed=0, type_of_block="inception", stage=0, initial_image=None):
         """
