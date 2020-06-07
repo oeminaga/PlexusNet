@@ -8,7 +8,7 @@ PlexusNet for medical imaging.
 
 #An example code to use the package: 
 
-from PlexusNet.architecture import PlexusNet <br />
+from plexusnet.architecture import PlexusNet <br />
 model=PlexusNet(depth=2, length=3, junction=3, n_class=2).model <br />
 
 model.compile(optimizer="adam", metrics=["acc"], loss="categorical_crossentropy") <br />
@@ -16,7 +16,7 @@ model.fit(X,Y)<br />
 
 #if you want to load a PlexusNet model:
 
-from PlexusNet.architecture import LoadModel<br />
+from plexusnet.architecture import LoadModel<br />
 model=LoadModel("your_model.h5")<br />
 model.predict(X)<br />
 
