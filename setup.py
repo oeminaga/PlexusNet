@@ -9,4 +9,8 @@ author_email='info@deepmedicine.ai',
 install_requires=['keras>=2.3.1', 'numpy>=1.9.1'],
 license='Only for research purposes, GPL. Please cite when you use, replicate or modfiy the package.',
 packages=find_packages(),
+<<<<<<< HEAD
 zip_safe=False)
+=======
+zip_safe=False)
+>>>>>>> .
