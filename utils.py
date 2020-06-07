@@ -3,6 +3,7 @@ Copyright by Okyaz Eminaga. 2020
 """
 from keras.engine.topology import Layer
 from keras.constraints import min_max_norm
+from keras import layers
 import keras.backend as K
 class RotationThetaWeightLayer(Layer): # a scaled layer
     def __init__(self, **kwargs):
