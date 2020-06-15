@@ -30,7 +30,7 @@ class PlexusNet():
         Architecture hyperparameter are:
         initial_filter (Default: 2)
         length (Default: 2)
-        depth (Default: 6)
+        depth (Default: 7)
         junction (Default: 3)
         
         You can modify or search the optimal architecture using these hyperparameters. Please be advised that the training set should be representative of different variation to build sophisticated models.
