@@ -281,9 +281,9 @@ class PlexusNet():
             
             y = layers.concatenate(last_connection)
         else:
-            raise NameError('Please specify the arguments, junction_only_the_last_layers, random_junctions')
+            raise NameError('Please specify the arguments including junction_only_the_last_layers, random_junctions')
 
-        #FC
+        #FC: You can change here whatever you want.
         y = layers.GlobalMaxPooling2D()(y)
         dense_shape = y.shape.as_list()[-1]
         #dense_shape = 1024
