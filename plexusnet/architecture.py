@@ -2,7 +2,7 @@
 Copyright by Okyaz Eminaga. 2020
 """
 from tensorflow.keras import layers, models,optimizers
-from tensorflow.keras.layers.advanced_activations import LeakyReLU
+from tensorflow.keras.layers import LeakyReLU
 import keras.backend as K
 from tensorflow.keras.constraints import min_max_norm
 from tensorflow.keras import regularizers, initializers
