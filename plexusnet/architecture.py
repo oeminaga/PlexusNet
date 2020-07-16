@@ -290,3 +290,6 @@ class PlexusNet():
         y = layers.Dense(dense_shape, activation= 'relu')(y)
         y = layers.Dense(self.n_class, activation=self.final_activation)(y)
         return y
+    def Save(self, filename):
+        self.model.save(filename)
+        print("saved...")
