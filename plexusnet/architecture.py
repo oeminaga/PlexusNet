@@ -50,8 +50,9 @@ class PlexusNet():
         self.type_of_block =type_of_block
         shape_default  = (self.input_shape[0], self.input_shape[1], self.number_input_channel)
         x = layers.Input(shape=shape_default)
-        x_y_o = layers.Lambda(lambda x: x*self.normalize_by_factor)(x)
-        x_y_o = ColorIntensityNormalisationSection(x_y_o)
+        x_y_o = layers.Lambda(lambda x: x*(1/255))(x)
+        x_y_o = utils.RotationThetaWeightLayer()([x_y_o,x_y_o])
+        #x_y_o = ColorIntensityNormalisationSection(x_y_o)
         #rescale
         x_y_o = layers.Lambda(lambda x: (2* (x - K.min(x)/(K.max(x)-K.min(x)))-1))(x_y_o)
         #Generate multiple channels from the image
