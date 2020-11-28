@@ -25,7 +25,7 @@ def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="ca
     return model_
     
 class PlexusNet():
-    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, type_of_block="inception", normalize_by_factor=1.0/255.0):
+    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", normalize_by_factor=1.0/255.0):
         """
         Architecture hyperparameter are:
         initial_filter (Default: 2)
@@ -51,12 +51,13 @@ class PlexusNet():
         shape_default  = (self.input_shape[0], self.input_shape[1], self.number_input_channel)
         x = layers.Input(shape=shape_default)
         x_y_o = layers.Lambda(lambda x: x*(1/255))(x)
-        x_y_o = utils.RotationThetaWeightLayer()([x_y_o,x_y_o])
-        #x_y_o = ColorIntensityNormalisationSection(x_y_o)
-        #rescale
-        x_y_o = layers.Lambda(lambda x: (2* (x - K.min(x)/(K.max(x)-K.min(x)))-1))(x_y_o)
+        if run_normalization:
+            x_y_o = utils.RotationThetaWeightLayer()([x_y_o,x_y_o])
+            #rescale
+        if run_rescale:
+            x_y_o = layers.Lambda(lambda x: (2* (x - K.min(x)/(K.max(x)-K.min(x)))-1))(x_y_o)
         #Generate multiple channels from the image
-        x_y = Conv2DBNSLU(x_y_o, filters= 32, kernel_size=(5, 5), strides=2, activation='relu', padding='same')
+        x_y = Conv2DBNSLU(x_y_o, filters= filter_num_for_first_convlayer, kernel_size=kernel_size_for_first_convlayer, strides=stride_for_first_convlayer, activation=activation_for_first_convlayer, padding='same')
         y = self.Core(x_y, initial_filter = self.initial_filter, length=self.length, depth=self.depth, number_of_junctions=self.junction, compression=self.compression_rate, type_of_block=self.type_of_block)
         self.model = models.Model(inputs=x, outputs=y)
     
