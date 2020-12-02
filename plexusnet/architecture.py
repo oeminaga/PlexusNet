@@ -110,7 +110,7 @@ class PlexusNet():
             x_y = layers.Activation("relu")(x_y)
             shape_c = x_y.shape.as_list()[-1]
             x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (1,1), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8))(x_y)
-            if if run_all_BN:
+            if run_all_BN:
                 x_y = layers.BatchNormalization(scale=False)(x_y)
             x_y = layers.Activation("relu")(x_y)
         if type_of_block=="soft_att":
@@ -151,7 +151,7 @@ class PlexusNet():
                 x_y = layers.BatchNormalization(epsilon=1.1e-5, scale=False)(x_y)
             shape_c = x_y.shape.as_list()[-1]
             x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (1,1), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8))(x_y)
-            if if run_all_BN:
+            if run_all_BN:
                 x_y = layers.BatchNormalization(scale=False)(x_y)
             x_y = layers.LeakyReLU()(x_y)
         return x_y
