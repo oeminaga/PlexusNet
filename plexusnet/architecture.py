@@ -318,7 +318,7 @@ class PlexusNet():
             raise NameError('Please specify the arguments including junction_only_the_last_layers, random_junctions')
 
         #FC: You can change here whatever you want.
-        if get_last_conv:
+        if self.get_last_conv:
             return y
         y = layers.GlobalMaxPooling2D()(y)
         dense_shape = y.shape.as_list()[-1]
