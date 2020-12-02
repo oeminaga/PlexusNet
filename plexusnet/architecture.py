@@ -25,7 +25,7 @@ def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="ca
     return model_
     
 class PlexusNet():
-    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", normalize_by_factor=1.0/255.0):
+    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0):
         """
         Architecture hyperparameter are:
         initial_filter (Default: 2)
@@ -48,6 +48,9 @@ class PlexusNet():
         self.random_junctions =random_junctions
         self.normalize_by_factor=normalize_by_factor
         self.type_of_block =type_of_block
+        self.get_last_conv = get_last_conv
+        self.run_all_BN =run_all_BN
+        
         shape_default  = (self.input_shape[0], self.input_shape[1], self.number_input_channel)
         x = layers.Input(shape=shape_default)
         x_y_o = layers.Lambda(lambda x: x*(1/255))(x)
@@ -56,6 +59,8 @@ class PlexusNet():
             #rescale
         if run_rescale:
             x_y_o = layers.Lambda(lambda x: (2* (x - K.min(x)/(K.max(x)-K.min(x)))-1))(x_y_o)
+        if crop_boundary:
+            x_y_o = layers.Cropping2D(cropping=crop_boundary)(x_y_o)
         #Generate multiple channels from the image
         x_y = Conv2DBNSLU(x_y_o, filters= filter_num_for_first_convlayer, kernel_size=kernel_size_for_first_convlayer, strides=stride_for_first_convlayer, activation=activation_for_first_convlayer, padding='same')
         y = self.Core(x_y, initial_filter = self.initial_filter, length=self.length, depth=self.depth, number_of_junctions=self.junction, compression=self.compression_rate, type_of_block=self.type_of_block)
@@ -84,11 +89,13 @@ class PlexusNet():
             x_v_3 = layers.Conv2D(initial_filter, (1,1), kernel_regularizer=kernel_regularizer,padding='same', kernel_initializer=initializers.glorot_uniform(seed=seed+7))(x_v_3)
             
             x_y = layers.Concatenate()([x_v_0, x_v_1_1,x_v_1_2, x_v_2_0,x_v_2_1, x_v_3])
-            x_y = layers.BatchNormalization(scale=False)(x_y)
+            if run_all_BN:
+                x_y = layers.BatchNormalization(scale=False)(x_y)
             x_y = layers.Activation('relu')(x_y)
             shape_c = x_y.shape.as_list()[-1]
             x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (1,1), strides=(1,1), padding='same', kernel_initializer=initializers.he_uniform(seed=seed+8))(x_y)
-            x_y = layers.BatchNormalization(scale=False)(x_y)
+            if run_all_BN:
+                x_y = layers.BatchNormalization(scale=False)(x_y)
             x_y = layers.Activation('relu')(x_y)
         if type_of_block=="resnet":
             x_y = conv_block(x, 3, [initial_filter, int(round(initial_filter*1.5)), initial_filter*2], stage=stage, block='a', strides=(1, 1))
@@ -98,12 +105,35 @@ class PlexusNet():
         if type_of_block=="vgg":
             x_y = layers.Conv2D(int(round(initial_filter)), (1,1),kernel_initializer=initializers.he_normal(seed=seed+8), kernel_regularizer=kernel_regularizer, padding='same')(x)
             x_y = layers.Conv2D(int(round(initial_filter*1.5)), (3,3),kernel_initializer=initializers.glorot_normal(seed=seed+10),kernel_regularizer=kernel_regularizer, padding='same')(x_y)
-            x_y = layers.BatchNormalization(epsilon=1.1e-5, scale=False)(x_y)
+            if run_all_BN:
+                x_y = layers.BatchNormalization(epsilon=1.1e-5, scale=False)(x_y)
             x_y = layers.Activation("relu")(x_y)
             shape_c = x_y.shape.as_list()[-1]
             x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (1,1), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8))(x_y)
-            x_y = layers.BatchNormalization(scale=False)(x_y)
+            if if run_all_BN:
+                x_y = layers.BatchNormalization(scale=False)(x_y)
             x_y = layers.Activation("relu")(x_y)
+        if type_of_block=="soft_att":
+            kernel_regularizer=l2(0.000001)
+            x = layers.LayerNormalization(scale=True, center=True)(x)
+            if x.shape.as_list()[2]<14:
+                x_y = layers.Conv2D(int(round(initial_filter*1.5)), (3,3),kernel_initializer=initializers.glorot_normal(seed=seed+8),kernel_regularizer=kernel_regularizer, padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001))(x)
+                x_y_u = layers.Conv2D(int(round(initial_filter*1.5)), (3,3), kernel_initializer=initializers.glorot_normal(seed=seed+5),kernel_regularizer=kernel_regularizer, padding='same',kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(1,1,1))(x)
+                x_y_t = layers.Conv2D(int(round(initial_filter*1.5)), (1,1),kernel_initializer=initializers.he_normal(seed=seed+9),kernel_regularizer=kernel_regularizer, padding='same',kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(1,1,1))(x)
+                
+                x_y_v = layers.Softmax(axis=-1)(x_y_u)
+                x_y_v = layers.Lambda(lambda x: x/K.max(x))(x_y_v)
+                x_y = layers.Multiply()([x_y_v, x_y])
+                x_y = layers.Add()([x_y_t,x_y])
+            else:
+                x_y_1 = layers.Conv2D(int(round(initial_filter))*1, (3,3),kernel_initializer=initializers.glorot_normal(seed=seed+8),kernel_regularizer=kernel_regularizer, padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(1,3,3))(x)
+                x_y_2 = layers.Conv2D(int(round(initial_filter))*1, (3,3),kernel_initializer=initializers.glorot_normal(seed=seed+8),kernel_regularizer=kernel_regularizer, padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(1,2,2))(x)
+                x_y = layers.concatenate([x_y_1,x_y_2], axis=-1)
+                x_y_t = layers.Conv2D(int(round(initial_filter*1))*2, (1,1),kernel_initializer=initializers.he_normal(seed=seed+9),kernel_regularizer=kernel_regularizer, padding='same',kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(1,1,1))(x)
+                x_y = layers.Add()([x_y_t,x_y])
+            shape_c = x_y.shape.as_list()[-1]
+            x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (3,3), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8),kernel_constraint=min_max_norm(-1,1,rate=0.001))(x_y)
+            x_y = layers.LeakyReLU()(x_y)
         if type_of_block=="vgg_short":
             x_y = layers.Conv2D(int(round(initial_filter)), (1,1),kernel_initializer=initializers.he_normal(seed=seed+8), kernel_regularizer=kernel_regularizer, padding='same')(x)
             x_y = layers.Conv2D(int(round(initial_filter*1.5)), (3,3),kernel_initializer=initializers.lecun_normal(seed=seed+8),kernel_regularizer=kernel_regularizer, padding='same')(x_y)
@@ -117,10 +147,12 @@ class PlexusNet():
                 x_y = layers.Concatenate()([initial_img_,x_y])
             x_y = layers.Conv2D(int(round(initial_filter*2)), (3,3),kernel_initializer=initializers.glorot_normal(seed=seed+8),kernel_regularizer=kernel_regularizer, padding='same')(x_y)
             x_y = layers.AveragePooling2D((2, 2),strides=(1,1), padding='same')(x_y)
-            x_y = layers.BatchNormalization(epsilon=1.1e-5, scale=False)(x_y)
+            if run_all_BN:
+                x_y = layers.BatchNormalization(epsilon=1.1e-5, scale=False)(x_y)
             shape_c = x_y.shape.as_list()[-1]
             x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (1,1), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8))(x_y)
-            x_y = layers.BatchNormalization(scale=False)(x_y)
+            if if run_all_BN:
+                x_y = layers.BatchNormalization(scale=False)(x_y)
             x_y = layers.LeakyReLU()(x_y)
         return x_y
 
@@ -286,6 +318,8 @@ class PlexusNet():
             raise NameError('Please specify the arguments including junction_only_the_last_layers, random_junctions')
 
         #FC: You can change here whatever you want.
+        if get_last_conv:
+            return y
         y = layers.GlobalMaxPooling2D()(y)
         dense_shape = y.shape.as_list()[-1]
         #dense_shape = 1024
