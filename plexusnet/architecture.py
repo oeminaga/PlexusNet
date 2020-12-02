@@ -89,12 +89,12 @@ class PlexusNet():
             x_v_3 = layers.Conv2D(initial_filter, (1,1), kernel_regularizer=kernel_regularizer,padding='same', kernel_initializer=initializers.glorot_uniform(seed=seed+7))(x_v_3)
             
             x_y = layers.Concatenate()([x_v_0, x_v_1_1,x_v_1_2, x_v_2_0,x_v_2_1, x_v_3])
-            if run_all_BN:
+            if self.run_all_BN:
                 x_y = layers.BatchNormalization(scale=False)(x_y)
             x_y = layers.Activation('relu')(x_y)
             shape_c = x_y.shape.as_list()[-1]
             x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (1,1), strides=(1,1), padding='same', kernel_initializer=initializers.he_uniform(seed=seed+8))(x_y)
-            if run_all_BN:
+            if self.run_all_BN:
                 x_y = layers.BatchNormalization(scale=False)(x_y)
             x_y = layers.Activation('relu')(x_y)
         if type_of_block=="resnet":
@@ -105,12 +105,12 @@ class PlexusNet():
         if type_of_block=="vgg":
             x_y = layers.Conv2D(int(round(initial_filter)), (1,1),kernel_initializer=initializers.he_normal(seed=seed+8), kernel_regularizer=kernel_regularizer, padding='same')(x)
             x_y = layers.Conv2D(int(round(initial_filter*1.5)), (3,3),kernel_initializer=initializers.glorot_normal(seed=seed+10),kernel_regularizer=kernel_regularizer, padding='same')(x_y)
-            if run_all_BN:
+            if self.run_all_BN:
                 x_y = layers.BatchNormalization(epsilon=1.1e-5, scale=False)(x_y)
             x_y = layers.Activation("relu")(x_y)
             shape_c = x_y.shape.as_list()[-1]
             x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (1,1), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8))(x_y)
-            if run_all_BN:
+            if self.run_all_BN:
                 x_y = layers.BatchNormalization(scale=False)(x_y)
             x_y = layers.Activation("relu")(x_y)
         if type_of_block=="soft_att":
@@ -147,11 +147,11 @@ class PlexusNet():
                 x_y = layers.Concatenate()([initial_img_,x_y])
             x_y = layers.Conv2D(int(round(initial_filter*2)), (3,3),kernel_initializer=initializers.glorot_normal(seed=seed+8),kernel_regularizer=kernel_regularizer, padding='same')(x_y)
             x_y = layers.AveragePooling2D((2, 2),strides=(1,1), padding='same')(x_y)
-            if run_all_BN:
+            if self.run_all_BN:
                 x_y = layers.BatchNormalization(epsilon=1.1e-5, scale=False)(x_y)
             shape_c = x_y.shape.as_list()[-1]
             x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (1,1), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8))(x_y)
-            if run_all_BN:
+            if self.run_all_BN:
                 x_y = layers.BatchNormalization(scale=False)(x_y)
             x_y = layers.LeakyReLU()(x_y)
         return x_y
