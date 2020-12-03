@@ -145,7 +145,7 @@ class PlexusNet():
             x_y_v = layers.Lambda(lambda x: x/K.max(x))(x_y_v)
             x_y = layers.Multiply()([x_y_v, x_y])
             x_y = layers.Add()([x_y_t,x_y])
-            hape_c = x_y.shape.as_list()[-1]
+            shape_c = x_y.shape.as_list()[-1]
             x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (3,3), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8),kernel_constraint=min_max_norm(-1,1,rate=0.001))(x_y)
             x_y = layers.LeakyReLU()(x_y)
         if type_of_block=="vgg_short":
