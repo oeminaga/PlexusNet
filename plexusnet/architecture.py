@@ -118,18 +118,18 @@ class PlexusNet():
             x = layers.LayerNormalization(scale=True, center=True)(x)
             if x.shape.as_list()[2]<14:
                 x_y = layers.Conv2D(int(round(initial_filter*1.5)), (3,3),kernel_initializer=initializers.glorot_normal(seed=seed+8),kernel_regularizer=kernel_regularizer, padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001))(x)
-                x_y_u = layers.Conv2D(int(round(initial_filter*1.5)), (3,3), kernel_initializer=initializers.glorot_normal(seed=seed+5),kernel_regularizer=kernel_regularizer, padding='same',kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(1,1,1))(x)
-                x_y_t = layers.Conv2D(int(round(initial_filter*1.5)), (1,1),kernel_initializer=initializers.he_normal(seed=seed+9),kernel_regularizer=kernel_regularizer, padding='same',kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(1,1,1))(x)
+                x_y_u = layers.Conv2D(int(round(initial_filter*1.5)), (3,3), kernel_initializer=initializers.glorot_normal(seed=seed+5),kernel_regularizer=kernel_regularizer, padding='same',kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(1,1))(x)
+                x_y_t = layers.Conv2D(int(round(initial_filter*1.5)), (1,1),kernel_initializer=initializers.he_normal(seed=seed+9),kernel_regularizer=kernel_regularizer, padding='same',kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(1,1))(x)
                 
                 x_y_v = layers.Softmax(axis=-1)(x_y_u)
                 x_y_v = layers.Lambda(lambda x: x/K.max(x))(x_y_v)
                 x_y = layers.Multiply()([x_y_v, x_y])
                 x_y = layers.Add()([x_y_t,x_y])
             else:
-                x_y_1 = layers.Conv2D(int(round(initial_filter))*1, (3,3),kernel_initializer=initializers.glorot_normal(seed=seed+8),kernel_regularizer=kernel_regularizer, padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(1,3,3))(x)
-                x_y_2 = layers.Conv2D(int(round(initial_filter))*1, (3,3),kernel_initializer=initializers.glorot_normal(seed=seed+8),kernel_regularizer=kernel_regularizer, padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(1,2,2))(x)
+                x_y_1 = layers.Conv2D(int(round(initial_filter))*1, (3,3),kernel_initializer=initializers.glorot_normal(seed=seed+8),kernel_regularizer=kernel_regularizer, padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(3,3))(x)
+                x_y_2 = layers.Conv2D(int(round(initial_filter))*1, (3,3),kernel_initializer=initializers.glorot_normal(seed=seed+8),kernel_regularizer=kernel_regularizer, padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(2,2))(x)
                 x_y = layers.concatenate([x_y_1,x_y_2], axis=-1)
-                x_y_t = layers.Conv2D(int(round(initial_filter*1))*2, (1,1),kernel_initializer=initializers.he_normal(seed=seed+9),kernel_regularizer=kernel_regularizer, padding='same',kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(1,1,1))(x)
+                x_y_t = layers.Conv2D(int(round(initial_filter*1))*2, (1,1),kernel_initializer=initializers.he_normal(seed=seed+9),kernel_regularizer=kernel_regularizer, padding='same',kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(1,1))(x)
                 x_y = layers.Add()([x_y_t,x_y])
             shape_c = x_y.shape.as_list()[-1]
             x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (3,3), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8),kernel_constraint=min_max_norm(-1,1,rate=0.001))(x_y)
