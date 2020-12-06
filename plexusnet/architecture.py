@@ -59,7 +59,7 @@ class PlexusNet():
             #rescale
         if run_rescale:
             x_y_o = layers.Lambda(lambda x: (2* (x - K.min(x)/(K.max(x)-K.min(x)))-1))(x_y_o)
-        if crop_boundary:
+        if add_crop_layer:
             x_y_o = layers.Cropping2D(cropping=crop_boundary)(x_y_o)
         #Generate multiple channels from the image
         x_y = Conv2DBNSLU(x_y_o, filters= filter_num_for_first_convlayer, kernel_size=kernel_size_for_first_convlayer, strides=stride_for_first_convlayer, activation=activation_for_first_convlayer, padding='same')
