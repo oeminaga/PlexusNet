@@ -25,7 +25,7 @@ def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="ca
     return model_
     
 class PlexusNet():
-    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0):
+    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False, GlobalPooling="max"):
         """
         Architecture hyperparameter are:
         initial_filter (Default: 2)
@@ -50,7 +50,8 @@ class PlexusNet():
         self.type_of_block =type_of_block
         self.get_last_conv = get_last_conv
         self.run_all_BN =run_all_BN
-        
+        self.GlobalPooling =GlobalPooling
+        self.apply_RandomFourierFeatures = apply_RandomFourierFeatures
         shape_default  = (self.input_shape[0], self.input_shape[1], self.number_input_channel)
         x = layers.Input(shape=shape_default)
         x_y_o = layers.Lambda(lambda x: x*(1/255))(x)
@@ -334,10 +335,19 @@ class PlexusNet():
         #FC: You can change here whatever you want.
         if self.get_last_conv:
             return y
-        y = layers.GlobalMaxPooling2D()(y)
+        if self.GlobalPooling==None:
+            y = layers.Flatten()(y)
+        if self.GlobalPooling=="max":
+            y = layers.GlobalMaxPooling2D()(y)
+        elif self.GlobalPooling=="avg":
+            y = layers.GlobalAveragePooling2D()(y)
+            
         dense_shape = y.shape.as_list()[-1]
         #dense_shape = 1024
-        y = layers.Dense(dense_shape, activation= 'relu')(y)
+        if self.apply_RandomFourierFeatures:
+            y = RandomFourierFeatures(output_dim=dense_shape, scale=10.0, kernel_initializer="gaussian")
+        else:
+            y = layers.Dense(dense_shape, activation= 'relu')(y)
         y = layers.Dense(self.n_class, activation=self.final_activation)(y)
         return y
     def Save(self, filename):
