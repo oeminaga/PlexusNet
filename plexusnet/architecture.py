@@ -365,7 +365,7 @@ class PlexusNet():
         
         if self.GlobalPooling is None or self.MIL_mode:
             y = layers.Flatten()(y)
-        if self.GlobalPooling=="max":
+        elif self.GlobalPooling=="max":
             y = layers.GlobalMaxPooling2D()(y)
         elif self.GlobalPooling=="avg":
             y = layers.GlobalAveragePooling2D()(y)
