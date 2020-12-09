@@ -195,7 +195,8 @@ class PlexusNet():
         for i in range(depth):
             x = self._conv_block(x, filter*(i+1)+2, reduction_channel_ratio=compression, kernel_regularizer=kernel_regularizer, seed=(i+counter), type_of_block=type_of_block, initial_image=initial_image)
             node.append(x)
-            x = layers.AveragePooling2D((2, 2), strides=(2, 2))(x) 
+            if not self.MIL_mode:
+                x = layers.AveragePooling2D((2, 2), strides=(2, 2))(x) 
         return node
 
     def Spider_Node_w_Junction(self, x_input, node, filter,compression=0.5, depth=5, kernel_regularizer=regularizers.l2(0.00001), counter=0, type_of_block="inception", initial_image=None):
@@ -204,7 +205,8 @@ class PlexusNet():
         for i in range(depth):
             x = self._conv_block(layers.concatenate([x,node[i]]), filter*(i+1)+2, reduction_channel_ratio=compression, kernel_regularizer=kernel_regularizer, seed=(i+counter), type_of_block=type_of_block, initial_image=initial_image)
             node_tmp.append(x)
-            x = layers.AveragePooling2D((2, 2), strides=(2, 2))(x) 
+            if not self.MIL_mode:
+                x = layers.AveragePooling2D((2, 2), strides=(2, 2))(x) 
         return node_tmp
 
     def Spider_Node_w_Junction_list(self, x_input, node, filter,compression=0.5, depth=5, junction_list=None, kernel_regularizer=regularizers.l2(0.00001), counter=0, type_of_block="inception",initial_image=None ):
@@ -220,7 +222,8 @@ class PlexusNet():
             x = self._conv_block(x, filter*(i+1)+2, reduction_channel_ratio=compression, kernel_regularizer=kernel_regularizer, seed=(i+counter),type_of_block=type_of_block, initial_image=initial_image)
             
             node_tmp.append(x)
-            x = layers.AveragePooling2D((2, 2), strides=(2, 2))(x) 
+            if not self.MIL_mode:
+                x = layers.AveragePooling2D((2, 2), strides=(2, 2))(x) 
         return node_tmp
 
     def Connect_Nodes(self, nodes, center_node_id=0):
@@ -354,7 +357,7 @@ class PlexusNet():
         if self.get_last_conv:
             return y
         
-        if self.GlobalPooling is None:
+        if self.GlobalPooling is None or if self.MIL_mode:
             y = layers.Flatten()(y)
         if self.GlobalPooling=="max":
             y = layers.GlobalMaxPooling2D()(y)
