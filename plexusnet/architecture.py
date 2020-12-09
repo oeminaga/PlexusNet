@@ -363,7 +363,7 @@ class PlexusNet():
         if self.get_last_conv:
             return y
         
-        if self.GlobalPooling is None or if self.MIL_mode:
+        if self.GlobalPooling is None or self.MIL_mode:
             y = layers.Flatten()(y)
         if self.GlobalPooling=="max":
             y = layers.GlobalMaxPooling2D()(y)
