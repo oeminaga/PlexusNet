@@ -373,6 +373,7 @@ class PlexusNet():
         dense_shape = y.shape.as_list()[-1]
         #dense_shape = 1024
         if self.MIL_mode:
+            weight_decay=0.0000001
             y = layers.Dense(dense_shape, activation= 'selu')(y)
             alpha = Mil_Attention(L_dim=dense_shape, output_dim=1, kernel_regularizer=l2(weight_decay), name='alpha', use_gated=self.useGated)(y)
             x_mul = multiply([alpha, y])
