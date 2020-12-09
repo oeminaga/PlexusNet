@@ -25,7 +25,7 @@ def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="ca
     return model_
     
 class PlexusNet():
-    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False, GlobalPooling="max"):
+    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_bag_size=8, GlobalPooling="max"):
         """
         Architecture hyperparameter are:
         initial_filter (Default: 2)
@@ -50,6 +50,8 @@ class PlexusNet():
         self.type_of_block =type_of_block
         self.get_last_conv = get_last_conv
         self.run_all_BN =run_all_BN
+        self.MIL_mode=MIL_mode
+        self.MIL_bag_size=MIL_bag_size
         self.GlobalPooling =GlobalPooling
         self.apply_RandomFourierFeatures = apply_RandomFourierFeatures
         shape_default  = (self.input_shape[0], self.input_shape[1], self.number_input_channel)
