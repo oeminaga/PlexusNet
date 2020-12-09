@@ -196,7 +196,7 @@ class PlexusNet():
             x = self._conv_block(x, filter*(i+1)+2, reduction_channel_ratio=compression, kernel_regularizer=kernel_regularizer, seed=(i+counter), type_of_block=type_of_block, initial_image=initial_image)
             node.append(x)
             if self.MIL_mode:
-                x = layers.Conv2D(filter*(i+1)+2, strides=(1,4), padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001))(x)
+                x = layers.Conv2D(filter*(i+1)+2, (1,4),strides=(1,4), padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001))(x)
             else:
                 x = layers.AveragePooling2D((2, 2), strides=(2, 2))(x)
         return node
@@ -208,7 +208,7 @@ class PlexusNet():
             x = self._conv_block(layers.concatenate([x,node[i]]), filter*(i+1)+2, reduction_channel_ratio=compression, kernel_regularizer=kernel_regularizer, seed=(i+counter), type_of_block=type_of_block, initial_image=initial_image)
             node_tmp.append(x)
             if self.MIL_mode:
-                x = layers.Conv2D(filter*(i+1)+2, strides=(1,4), padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001))(x)
+                x = layers.Conv2D(filter*(i+1)+2, (1,4),strides=(1,4), padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001))(x)
             else:
                 x = layers.AveragePooling2D((2, 2), strides=(2, 2))(x) 
         return node_tmp
@@ -227,7 +227,7 @@ class PlexusNet():
             
             node_tmp.append(x)
             if self.MIL_mode:
-                x = layers.Conv2D(filter*(i+1)+2, strides=(1,4), padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001))(x)
+                x = layers.Conv2D(filter*(i+1)+2, (1,4),strides=(1,4), padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001))(x)
             else:
                 x = layers.AveragePooling2D((2, 2), strides=(2, 2))(x) 
         return node_tmp
