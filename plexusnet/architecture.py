@@ -76,6 +76,21 @@ class PlexusNet():
         initial_filter : integer
         type_of_block selection: inception,resnet,vgg,vgg_short
         """
+        if self.MIL_mode:
+            kernel_regularizer=l2(0.000001)
+            x = layers.LayerNormalization(scale=True, center=True)(x)
+            x_y = layers.Conv2D(int(round(initial_filter*1.5)), (1,16),kernel_initializer=initializers.glorot_normal(seed=seed+8),kernel_regularizer=kernel_regularizer, padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001))(x)
+            x_y_u = layers.Conv2D(int(round(initial_filter*1.5)), (1,16), kernel_initializer=initializers.glorot_normal(seed=seed+5),kernel_regularizer=kernel_regularizer, padding='same',kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(1,8))(x)
+            x_y_t = layers.Conv2D(int(round(initial_filter*1.5)), (1,1),kernel_initializer=initializers.he_normal(seed=seed+9),kernel_regularizer=kernel_regularizer, padding='same',kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(1,1))(x)
+               
+            x_y_v = layers.Softmax(axis=-1)(x_y_u)
+            x_y_v = layers.Lambda(lambda x: x/K.max(x))(x_y_v)
+            x_y = layers.Multiply()([x_y_v, x_y])
+            x_y = layers.Add()([x_y_t,x_y])
+            shape_c = x_y.shape.as_list()[-1]
+            x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (1,16), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8),kernel_constraint=min_max_norm(-1,1,rate=0.001))(x_y)
+            x_y = layers.LeakyReLU()(x_y)
+            return x_y
         if type_of_block=="inception":
             x_v_0 = layers.Conv2D(initial_filter, (1,1),kernel_regularizer=kernel_regularizer, padding='same', kernel_initializer=initializers.glorot_uniform(seed=seed))(x)
             
