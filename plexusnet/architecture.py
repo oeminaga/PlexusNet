@@ -51,7 +51,6 @@ class PlexusNet():
         self.get_last_conv = get_last_conv
         self.run_all_BN =run_all_BN
         self.MIL_mode=MIL_mode
-        self.MIL_bag_size=MIL_bag_size
         self.GlobalPooling =GlobalPooling
         self.useGated = MIL_useGated
         self.MIL_CONV_mode = MIL_CONV_mode
