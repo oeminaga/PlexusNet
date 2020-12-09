@@ -16,7 +16,7 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D,GlobalAv
 from .functions import *
 
 def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="categorical_crossentropy"):
-    custom_objects_internal = {'JunctionWeightLayer':utils.JunctionWeightLayer, 'RotationThetaWeightLayer': utils.RotationThetaWeightLayer}
+    custom_objects_internal = {'JunctionWeightLayer':utils.JunctionWeightLayer, 'RotationThetaWeightLayer': utils.RotationThetaWeightLayer, "Last_Sigmoid":Last_Sigmoid, "Mil_Attention":Mil_Attention}
     for  key in custom_objects:
         custom_objects_internal[key]=custom_objects[key]
 
