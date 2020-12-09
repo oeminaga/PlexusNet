@@ -377,7 +377,8 @@ class PlexusNet():
             y = layers.Dense(dense_shape, activation= 'selu')(y)
             alpha = Mil_Attention(L_dim=dense_shape, output_dim=1, kernel_regularizer=l2(weight_decay), name='alpha', use_gated=self.useGated)(y)
             x_mul = layers.Multiply()([alpha, y])
-            y = Last_Sigmoid(output_dim=1, name='FC1_sigmoid')(x_mul)
+            y = layers.Dense(self.n_class, activation=self.final_activation)(x_mul)
+            #y = Last_Sigmoid(output_dim=1, name='FC1_sigmoid')(x_mul)
             return y
             
         if self.apply_RandomFourierFeatures:
