@@ -25,7 +25,7 @@ def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="ca
     return model_
     
 class PlexusNet():
-    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_useGated=False, GlobalPooling="max"):
+    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_useGated=False,SCL=False, GlobalPooling="max"):
         """
         Architecture hyperparameter are:
         initial_filter (Default: 2)
@@ -51,6 +51,7 @@ class PlexusNet():
         self.get_last_conv = get_last_conv
         self.run_all_BN =run_all_BN
         self.MIL_mode=MIL_mode
+        self.SCL=SCL
         self.GlobalPooling =GlobalPooling
         self.useGated = MIL_useGated
         self.MIL_CONV_mode = MIL_CONV_mode
@@ -358,12 +359,23 @@ class PlexusNet():
             y = layers.concatenate(last_connection)
         else:
             raise NameError('Please specify the arguments including junction_only_the_last_layers, random_junctions')
-
         #FC: You can change here whatever you want.
         if self.get_last_conv:
             return y
-        
-        if self.GlobalPooling is None or self.MIL_mode:
+        #Supervised-Contrastive-Learning
+        if self.SCL:
+            y = layers.GlobalAveragePooling2D()(y)
+	        y = layer.LayerNormalization()(y)
+            return y
+
+        if self.CPC:
+            y = layers.Flatten()(y)
+            y = layers.Dense(units=256, activation='linear')(y)
+            y = keras.layers.LayerNormalization()(x)
+            y = keras.layers.LeakyReLU()(x)
+            y = keras.layers.Dense(units=256, activation='linear', name='encoder_embedding')(x)
+            return y
+        elif self.GlobalPooling is None or self.MIL_mode:
             y = layers.Flatten()(y)
         elif self.GlobalPooling=="max":
             y = layers.GlobalMaxPooling2D()(y)
@@ -373,9 +385,9 @@ class PlexusNet():
         dense_shape = y.shape.as_list()[-1]
         #dense_shape = 1024
         if self.MIL_mode or self.MIL_CONV_mode:
-            weight_decay=0.0000001
+            #weight_decay=0.00001
             y = layers.Dense(dense_shape, activation= 'selu')(y)
-            alpha = Mil_Attention(L_dim=dense_shape, output_dim=1, kernel_regularizer=l2(weight_decay), name='alpha', use_gated=self.useGated)(y)
+            alpha = Mil_Attention(L_dim=dense_shape, output_dim=1, name='alpha', use_gated=self.useGated)(y)
             x_mul = layers.Multiply()([alpha, y])
             y = layers.Dense(self.n_class, activation=self.final_activation)(x_mul)
             #y = Last_Sigmoid(output_dim=1, name='FC1_sigmoid')(x_mul)
@@ -578,4 +590,59 @@ class Last_Sigmoid(Layer):
             'use_bias': self.use_bias
         }
         base_config = super(Last_Sigmoid, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))      
+        return dict(list(base_config.items()) + list(config.items()))
+    
+class CPCLayer(Layer):
+
+    ''' Computes dot product between true and predicted embedding vectors '''
+
+    def __init__(self, **kwargs):
+        super(CPCLayer, self).__init__(**kwargs)
+
+    def call(self, inputs):
+
+        # Compute dot product among vectors
+        preds, y_encoded = inputs
+        dot_product = K.mean(y_encoded * preds, axis=-1)
+        dot_product = K.mean(dot_product, axis=-1, keepdims=True)  # average along the temporal dimension
+
+        # Keras loss functions take probabilities
+        dot_product_probs = K.sigmoid(dot_product)
+
+        return dot_product_probs
+
+    def compute_output_shape(self, input_shape):
+        return (input_shape[0][0], 1)
+    
+def network_prediction(context, code_size, predict_terms):
+
+    ''' Define the network mapping context to multiple embeddings '''
+
+    outputs = []
+    for i in range(predict_terms):
+        outputs.append(layers.Dense(units=code_size, activation="linear", name='z_t_{i}'.format(i=i))(context))
+
+    if len(outputs) == 1:
+        output = layers.Lambda(lambda x: K.expand_dims(x, axis=1))(outputs[0])
+    else:
+        output = layers.Lambda(lambda x: K.stack(x, axis=1))(outputs)
+
+    return output
+# Projector Network
+def projector_net(hiddenunits=256, activation="relu"):
+	projector = tf.keras.models.Sequential([
+		Dense(hiddenunits, activation=activation),
+		UnitNormLayer()
+	])
+	return projector
+
+# Reference: https://github.com/wangz10/contrastive_loss/blob/master/model.py
+class UnitNormLayer(tf.keras.layers.Layer):
+    '''Normalize vectors (euclidean norm) in batch to unit hypersphere.
+    '''
+    def __init__(self):
+        super(UnitNormLayer, self).__init__()
+
+    def call(self, input_tensor):
+        norm = tf.norm(input_tensor, axis=1)
+        return input_tensor / tf.reshape(norm, [-1, 1])
