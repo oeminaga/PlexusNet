@@ -25,7 +25,7 @@ def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="ca
     return model_
     
 class PlexusNet():
-    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_useGated=False,SCL=False, GlobalPooling="max"):
+    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max"):
         """
         Architecture hyperparameter are:
         initial_filter (Default: 2)
@@ -52,6 +52,10 @@ class PlexusNet():
         self.run_all_BN =run_all_BN
         self.MIL_mode=MIL_mode
         self.SCL=SCL
+	self.CPC=CPC
+	self.terms=terms
+	self.predict_terms=predict_terms
+	self.code_size=code_size
         self.GlobalPooling =GlobalPooling
         self.useGated = MIL_useGated
         self.MIL_CONV_mode = MIL_CONV_mode
@@ -69,7 +73,27 @@ class PlexusNet():
         #Generate multiple channels from the image
         x_y = Conv2DBNSLU(x_y_o, filters= filter_num_for_first_convlayer, kernel_size=kernel_size_for_first_convlayer, strides=stride_for_first_convlayer, activation=activation_for_first_convlayer, padding='same')
         y = self.Core(x_y, initial_filter = self.initial_filter, length=self.length, depth=self.depth, number_of_junctions=self.junction, compression=self.compression_rate, type_of_block=self.type_of_block)
-        self.model = models.Model(inputs=x, outputs=y)
+        if self.SCL:
+	    embeddings = y
+	    embeddings = GlobalAveragePooling2D()(embeddings)
+	    norm_embeddings = normalization_layer(embeddings)
+	    self.model = keras.models.Model(inputs=x, outputs=norm_embeddings)
+	elif self.CPC:
+	    K.set_learning_phase(1)
+	    self.encoder_model = models.Model(inputs=x, outputs=y, name='encoder')
+	    x_input = keras.layers.Input((self.terms, self.input_shape[0], self.input_shape[1], self.number_input_channel))
+	    x_encoded = keras.layers.TimeDistributed(self.encoder_model)(x_input)
+	    context = network_autoregressive(x_encoded)
+	    preds = network_prediction(context, self.code_size, self.predict_terms)
+	    y_input = keras.layers.Input((self.predict_terms, self.input_shape[0], self.input_shape[1], self.number_input_channel))
+	    y_encoded = keras.layers.TimeDistributed(self.encoder_model)(y_input)
+
+            # Loss
+	    dot_product_probs = CPCLayer()([preds, y_encoded])
+	    # Model
+	    self.model = keras.models.Model(inputs=[x_input, y_input], outputs=dot_product_probs)
+	else:
+	    self.model = models.Model(inputs=x, outputs=y)
     
     def _conv_block(self, x, initial_filter, reduction_channel_ratio=0.5, kernel_regularizer=None, seed=0, type_of_block="inception", stage=0, initial_image=None):
         """
@@ -367,13 +391,13 @@ class PlexusNet():
             y = layers.GlobalAveragePooling2D()(y)
             y = layers.LayerNormalization()(y)
             return y
-
+        #Contrastive Predictive Coding
         if self.CPC:
             y = layers.Flatten()(y)
             y = layers.Dense(units=256, activation='linear')(y)
             y = layers.LayerNormalization()(x)
             y = layers.LeakyReLU()(x)
-            y = layers.Dense(units=256, activation='linear', name='encoder_embedding')(x)
+            y = layers.Dense(units=self.code_size, activation='linear', name='encoder_embedding')(x)
             return y
         elif self.GlobalPooling is None or self.MIL_mode:
             y = layers.Flatten()(y)
