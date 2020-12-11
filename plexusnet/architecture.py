@@ -74,7 +74,7 @@ class PlexusNet():
         x_y = Conv2DBNSLU(x_y_o, filters= filter_num_for_first_convlayer, kernel_size=kernel_size_for_first_convlayer, strides=stride_for_first_convlayer, activation=activation_for_first_convlayer, padding='same')
         y = self.Core(x_y, initial_filter = self.initial_filter, length=self.length, depth=self.depth, number_of_junctions=self.junction, compression=self.compression_rate, type_of_block=self.type_of_block)
         if self.SCL:
-            self.model = keras.models.Model(inputs=x, outputs=y)
+            self.model = models.Model(inputs=x, outputs=y)
         elif self.CPC:
             K.set_learning_phase(1)
             self.encoder_model = models.Model(inputs=x, outputs=y, name='encoder')
@@ -87,7 +87,7 @@ class PlexusNet():
             # Loss
             dot_product_probs = CPCLayer()([preds, y_encoded])
             # Model
-            self.model = keras.models.Model(inputs=[x_input, y_input], outputs=dot_product_probs)
+            self.model = models.Model(inputs=[x_input, y_input], outputs=dot_product_probs)
         else:
             self.model = models.Model(inputs=x, outputs=y)
     
