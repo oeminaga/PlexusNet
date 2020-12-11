@@ -12,6 +12,7 @@ import os
 from . import utils
 from tensorflow.keras.models import load_model
 from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers.experimental import RandomFourierFeatures
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D,GlobalAveragePooling2D,Activation, Dropout, Dense, GlobalMaxPooling2D
 from .functions import *
 import tensorflow as tf
