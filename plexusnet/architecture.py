@@ -407,8 +407,8 @@ class PlexusNet():
         #dense_shape = 1024
         if self.MIL_mode or self.MIL_CONV_mode:
             #weight_decay=0.00001
-            y = layers.Dense(dense_shape, activation= 'selu')(y)
-            alpha = Mil_Attention(L_dim=dense_shape, output_dim=1, name='alpha', use_gated=self.useGated)(y)
+            y = layers.Dense(256, activation= 'relu')(y)
+            alpha = Mil_Attention(L_dim=256, output_dim=1, name='alpha', use_gated=self.useGated)(y)
             x_mul = layers.Multiply()([alpha, y])
             y = layers.Dense(self.n_class, activation=self.final_activation)(x_mul)
             #y = Last_Sigmoid(output_dim=1, name='FC1_sigmoid')(x_mul)
