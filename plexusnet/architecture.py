@@ -14,7 +14,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D,GlobalAveragePooling2D,Activation, Dropout, Dense, GlobalMaxPooling2D
 from .functions import *
-
+import tensorflow as tf
 def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="categorical_crossentropy"):
     custom_objects_internal = {'JunctionWeightLayer':utils.JunctionWeightLayer, 'RotationThetaWeightLayer': utils.RotationThetaWeightLayer, "Last_Sigmoid":Last_Sigmoid, "Mil_Attention":Mil_Attention}
     for  key in custom_objects:
@@ -637,7 +637,7 @@ def projector_net(hiddenunits=256, activation="relu"):
 	return projector
 
 # Reference: https://github.com/wangz10/contrastive_loss/blob/master/model.py
-class UnitNormLayer(tf.keras.layers.Layer):
+class UnitNormLayer(layers.Layer):
     '''Normalize vectors (euclidean norm) in batch to unit hypersphere.
     '''
     def __init__(self):
