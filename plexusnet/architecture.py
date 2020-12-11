@@ -74,10 +74,7 @@ class PlexusNet():
         x_y = Conv2DBNSLU(x_y_o, filters= filter_num_for_first_convlayer, kernel_size=kernel_size_for_first_convlayer, strides=stride_for_first_convlayer, activation=activation_for_first_convlayer, padding='same')
         y = self.Core(x_y, initial_filter = self.initial_filter, length=self.length, depth=self.depth, number_of_junctions=self.junction, compression=self.compression_rate, type_of_block=self.type_of_block)
         if self.SCL:
-            embeddings = y
-            embeddings = GlobalAveragePooling2D()(embeddings)
-            norm_embeddings = normalization_layer(embeddings)
-            self.model = keras.models.Model(inputs=x, outputs=norm_embeddings)
+            self.model = keras.models.Model(inputs=x, outputs=y)
         elif self.CPC:
             K.set_learning_phase(1)
             self.encoder_model = models.Model(inputs=x, outputs=y, name='encoder')
