@@ -417,6 +417,7 @@ class PlexusNet():
             return y
             
         if self.apply_RandomFourierFeatures:
+            y = layers.Dense(dense_shape)(y)
             y = RandomFourierFeatures(output_dim=dense_shape, scale=10.0, kernel_initializer="gaussian")(y)
         else:
             y = layers.Dense(dense_shape, activation= 'selu')(y)
