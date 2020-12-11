@@ -75,6 +75,7 @@ class PlexusNet():
         y = self.Core(x_y, initial_filter = self.initial_filter, length=self.length, depth=self.depth, number_of_junctions=self.junction, compression=self.compression_rate, type_of_block=self.type_of_block)
         if self.SCL:
             self.model = models.Model(inputs=x, outputs=y)
+            self.projector_z = projector_net()
         elif self.CPC:
             K.set_learning_phase(1)
             self.encoder_model = models.Model(inputs=x, outputs=y, name='encoder')
