@@ -80,12 +80,12 @@ class PlexusNet():
         elif self.CPC:
             K.set_learning_phase(1)
             self.encoder_model = models.Model(inputs=x, outputs=y, name='encoder')
-            x_input = keras.layers.Input((self.terms, self.input_shape[0], self.input_shape[1], self.number_input_channel))
-            x_encoded = keras.layers.TimeDistributed(self.encoder_model)(x_input)
+            x_input = layers.Input((self.terms, self.input_shape[0], self.input_shape[1], self.number_input_channel))
+            x_encoded = layers.TimeDistributed(self.encoder_model)(x_input)
             context = network_autoregressive(x_encoded)
             preds = network_prediction(context, self.code_size, self.predict_terms)
-            y_input = keras.layers.Input((self.predict_terms, self.input_shape[0], self.input_shape[1], self.number_input_channel))
-            y_encoded = keras.layers.TimeDistributed(self.encoder_model)(y_input)
+            y_input = layers.Input((self.predict_terms, self.input_shape[0], self.input_shape[1], self.number_input_channel))
+            y_encoded = layers.TimeDistributed(self.encoder_model)(y_input)
             # Loss
             dot_product_probs = CPCLayer()([preds, y_encoded])
             # Model
