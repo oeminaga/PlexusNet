@@ -25,7 +25,7 @@ def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="ca
     return model_
     
 class PlexusNet():
-    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max"):
+    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max"):
         """
         Architecture hyperparameter are:
         initial_filter (Default: 2)
@@ -51,6 +51,7 @@ class PlexusNet():
         self.get_last_conv = get_last_conv
         self.run_all_BN =run_all_BN
         self.MIL_mode=MIL_mode
+	self.MIL_FC_percentage_of_feature=MIL_FC_percentage_of_feature
         self.SCL=SCL
         self.CPC=CPC
         self.terms=terms
@@ -407,8 +408,8 @@ class PlexusNet():
         #dense_shape = 1024
         if self.MIL_mode or self.MIL_CONV_mode:
             #weight_decay=0.00001
-            y = layers.Dense(256, activation= 'relu')(y)
-            alpha = Mil_Attention(L_dim=256, output_dim=1, name='alpha', use_gated=self.useGated)(y)
+            y = layers.Dense(int(round(self.MIL_FC_percentage_of_feature*dense_shape)), activation= 'relu')(y)
+            alpha = Mil_Attention(L_dim=int(round(self.MIL_FC_percentage_of_feature*dense_shape)), output_dim=1, name='alpha', use_gated=self.useGated)(y)
             x_mul = layers.Multiply()([alpha, y])
             y = layers.Dense(self.n_class, activation=self.final_activation)(x_mul)
             #y = Last_Sigmoid(output_dim=1, name='FC1_sigmoid')(x_mul)
