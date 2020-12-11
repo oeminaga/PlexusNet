@@ -51,7 +51,7 @@ class PlexusNet():
         self.get_last_conv = get_last_conv
         self.run_all_BN =run_all_BN
         self.MIL_mode=MIL_mode
-	self.MIL_FC_percentage_of_feature=MIL_FC_percentage_of_feature
+        self.MIL_FC_percentage_of_feature=MIL_FC_percentage_of_feature
         self.SCL=SCL
         self.CPC=CPC
         self.terms=terms
