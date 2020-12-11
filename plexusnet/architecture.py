@@ -52,10 +52,10 @@ class PlexusNet():
         self.run_all_BN =run_all_BN
         self.MIL_mode=MIL_mode
         self.SCL=SCL
-	self.CPC=CPC
-	self.terms=terms
-	self.predict_terms=predict_terms
-	self.code_size=code_size
+        self.CPC=CPC
+        self.terms=terms
+        self.predict_terms=predict_terms
+        self.code_size=code_size
         self.GlobalPooling =GlobalPooling
         self.useGated = MIL_useGated
         self.MIL_CONV_mode = MIL_CONV_mode
