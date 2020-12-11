@@ -365,15 +365,15 @@ class PlexusNet():
         #Supervised-Contrastive-Learning
         if self.SCL:
             y = layers.GlobalAveragePooling2D()(y)
-	    y = layer.LayerNormalization()(y)
+	    y = layers.LayerNormalization()(y)
             return y
 
         if self.CPC:
             y = layers.Flatten()(y)
             y = layers.Dense(units=256, activation='linear')(y)
-            y = keras.layers.LayerNormalization()(x)
-            y = keras.layers.LeakyReLU()(x)
-            y = keras.layers.Dense(units=256, activation='linear', name='encoder_embedding')(x)
+            y = layers.LayerNormalization()(x)
+            y = layers.LeakyReLU()(x)
+            y = layers.Dense(units=256, activation='linear', name='encoder_embedding')(x)
             return y
         elif self.GlobalPooling is None or self.MIL_mode:
             y = layers.Flatten()(y)
