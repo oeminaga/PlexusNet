@@ -74,26 +74,25 @@ class PlexusNet():
         x_y = Conv2DBNSLU(x_y_o, filters= filter_num_for_first_convlayer, kernel_size=kernel_size_for_first_convlayer, strides=stride_for_first_convlayer, activation=activation_for_first_convlayer, padding='same')
         y = self.Core(x_y, initial_filter = self.initial_filter, length=self.length, depth=self.depth, number_of_junctions=self.junction, compression=self.compression_rate, type_of_block=self.type_of_block)
         if self.SCL:
-	    embeddings = y
-	    embeddings = GlobalAveragePooling2D()(embeddings)
-	    norm_embeddings = normalization_layer(embeddings)
-	    self.model = keras.models.Model(inputs=x, outputs=norm_embeddings)
-	elif self.CPC:
-	    K.set_learning_phase(1)
-	    self.encoder_model = models.Model(inputs=x, outputs=y, name='encoder')
-	    x_input = keras.layers.Input((self.terms, self.input_shape[0], self.input_shape[1], self.number_input_channel))
-	    x_encoded = keras.layers.TimeDistributed(self.encoder_model)(x_input)
-	    context = network_autoregressive(x_encoded)
-	    preds = network_prediction(context, self.code_size, self.predict_terms)
-	    y_input = keras.layers.Input((self.predict_terms, self.input_shape[0], self.input_shape[1], self.number_input_channel))
-	    y_encoded = keras.layers.TimeDistributed(self.encoder_model)(y_input)
-
+            embeddings = y
+            embeddings = GlobalAveragePooling2D()(embeddings)
+            norm_embeddings = normalization_layer(embeddings)
+            self.model = keras.models.Model(inputs=x, outputs=norm_embeddings)
+        elif self.CPC:
+            K.set_learning_phase(1)
+            self.encoder_model = models.Model(inputs=x, outputs=y, name='encoder')
+            x_input = keras.layers.Input((self.terms, self.input_shape[0], self.input_shape[1], self.number_input_channel))
+            x_encoded = keras.layers.TimeDistributed(self.encoder_model)(x_input)
+            context = network_autoregressive(x_encoded)
+            preds = network_prediction(context, self.code_size, self.predict_terms)
+            y_input = keras.layers.Input((self.predict_terms, self.input_shape[0], self.input_shape[1], self.number_input_channel))
+            y_encoded = keras.layers.TimeDistributed(self.encoder_model)(y_input)
             # Loss
-	    dot_product_probs = CPCLayer()([preds, y_encoded])
-	    # Model
-	    self.model = keras.models.Model(inputs=[x_input, y_input], outputs=dot_product_probs)
-	else:
-	    self.model = models.Model(inputs=x, outputs=y)
+            dot_product_probs = CPCLayer()([preds, y_encoded])
+            # Model
+            self.model = keras.models.Model(inputs=[x_input, y_input], outputs=dot_product_probs)
+        else:
+            self.model = models.Model(inputs=x, outputs=y)
     
     def _conv_block(self, x, initial_filter, reduction_channel_ratio=0.5, kernel_regularizer=None, seed=0, type_of_block="inception", stage=0, initial_image=None):
         """
