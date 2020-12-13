@@ -681,8 +681,7 @@ def network_prediction(context, code_size, predict_terms):
 def projector_net(hiddenunits=256, activation="relu", ApplyUnitNormLayer=False):
 	projector = tf.keras.models.Sequential([
 		Dense(hiddenunits, activation=activation),
-                if ApplyUnitNormLayer:
-		    UnitNormLayer()
+		UnitNormLayer()
 	])
 	return projector
 
