@@ -69,14 +69,14 @@ class PlexusNet():
         self.apply_RandomFourierFeatures = apply_RandomFourierFeatures
         shape_default  = (self.input_shape[0], self.input_shape[1], self.number_input_channel)
         x = layers.Input(shape=shape_default)
-	if self.apply_augmentation:
+        if self.apply_augmentation:
             data_augmentation = keras.Sequential([
             layers.experimental.preprocessing.RandomFlip("horizontal"),
             layers.experimental.preprocessing.RandomRotation(0.02),
             layers.experimental.preprocessing.RandomWidth(0.2),
             layers.experimental.preprocessing.RandomHeight(0.2),])
-	    x_x=data_augmentation(x)
-	else:
+            x_x=data_augmentation(x)
+        else:
             x_x=x
 		
         x_y_o = layers.Lambda(lambda x: x*(1/255))(x_x)
