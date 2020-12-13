@@ -403,7 +403,7 @@ class PlexusNet():
         #Supervised-Contrastive-Learning
         if self.SCL:
             y = layers.GlobalAveragePooling2D()(y)
-            y = layers.LayerNormalization()(y)
+            #y = layers.LayerNormalization()(y)
             return y
         #Contrastive Predictive Coding
         if self.CPC:
