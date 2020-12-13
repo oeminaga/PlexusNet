@@ -79,7 +79,11 @@ class PlexusNet():
             x_x=data_augmentation(x)
         else:
             x_x=x
-		
+	if self.propogate_img:
+	    x_a = layers.experimental.preprocessing.RandomRotation(0.1)(x_x)
+            x_b = layers.experimental.preprocessing.RandomZoom (0.1)(x_x)
+            x_c = x_x
+            x_x = layers.Concatenate()([x_a,x_b,x_c])
         x_y_o = layers.Lambda(lambda x: x*(1/255))(x_x)
         if run_normalization:
             x_y_o = utils.RotationThetaWeightLayer()([x_y_o,x_y_o])
