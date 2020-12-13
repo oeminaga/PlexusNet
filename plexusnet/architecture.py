@@ -16,6 +16,9 @@ from tensorflow.keras.layers.experimental import RandomFourierFeatures
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D,GlobalAveragePooling2D,Activation, Dropout, Dense, GlobalMaxPooling2D
 from .functions import *
 import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+
 def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="categorical_crossentropy"):
     custom_objects_internal = {'JunctionWeightLayer':utils.JunctionWeightLayer, 'RotationThetaWeightLayer': utils.RotationThetaWeightLayer, "Last_Sigmoid":Last_Sigmoid, "Mil_Attention":Mil_Attention}
     for  key in custom_objects:
@@ -26,7 +29,7 @@ def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="ca
     return model_
     
 class PlexusNet():
-    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max"):
+    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max", apply_augmentation=False):
         """
         Architecture hyperparameter are:
         initial_filter (Default: 2)
@@ -52,6 +55,7 @@ class PlexusNet():
         self.get_last_conv = get_last_conv
         self.run_all_BN =run_all_BN
         self.MIL_mode=MIL_mode
+	self.apply_augmentation=apply_augmentation
         self.MIL_FC_percentage_of_feature=MIL_FC_percentage_of_feature
         self.SCL=SCL
         self.CPC=CPC
@@ -64,7 +68,17 @@ class PlexusNet():
         self.apply_RandomFourierFeatures = apply_RandomFourierFeatures
         shape_default  = (self.input_shape[0], self.input_shape[1], self.number_input_channel)
         x = layers.Input(shape=shape_default)
-        x_y_o = layers.Lambda(lambda x: x*(1/255))(x)
+	if self.apply_augmentation:
+            data_augmentation = keras.Sequential([
+            layers.experimental.preprocessing.RandomFlip("horizontal"),
+            layers.experimental.preprocessing.RandomRotation(0.02),
+            layers.experimental.preprocessing.RandomWidth(0.2),
+            layers.experimental.preprocessing.RandomHeight(0.2),])
+	    x_x=data_augmentation(x)
+	else:
+            x_x=x
+		
+        x_y_o = layers.Lambda(lambda x: x*(1/255))(x_x)
         if run_normalization:
             x_y_o = utils.RotationThetaWeightLayer()([x_y_o,x_y_o])
             #rescale
@@ -434,6 +448,14 @@ class PlexusNet():
 from keras.layers import Layer
 from keras import backend as K
 from keras import activations, initializers, regularizers
+def add_projection_head(encoder,input_shape,projection_units):
+    inputs = keras.Input(shape=input_shape)
+    features = encoder(inputs)
+    outputs = layers.Dense(projection_units, activation="relu")(features)
+    model = keras.Model(
+        inputs=inputs, outputs=outputs, name="encoder_with_projection-head"
+    )
+    return model
 
 class Mil_Attention(Layer):
     """
@@ -672,3 +694,20 @@ class UnitNormLayer(layers.Layer):
     def call(self, input_tensor):
         norm = tf.norm(input_tensor, axis=1)
         return input_tensor / tf.reshape(norm, [-1, 1])
+
+class SupervisedContrastiveLoss(keras.losses.Loss):
+    def __init__(self, temperature=1, name=None):
+        super(SupervisedContrastiveLoss, self).__init__(name=name)
+        self.temperature = temperature
+
+    def __call__(self, labels, feature_vectors, sample_weight=None):
+        # Normalize feature vectors
+        feature_vectors_normalized = tf.math.l2_normalize(feature_vectors, axis=1)
+        # Compute logits
+        logits = tf.divide(
+            tf.matmul(
+                feature_vectors_normalized, tf.transpose(feature_vectors_normalized)
+            ),
+            temperature,
+        )
+        return tfa.losses.npairs_loss(tf.squeeze(labels), logits)
