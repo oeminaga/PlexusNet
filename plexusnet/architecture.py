@@ -18,6 +18,7 @@ from .functions import *
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+import tensorflow_addons as tfa
 
 def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="categorical_crossentropy"):
     custom_objects_internal = {'JunctionWeightLayer':utils.JunctionWeightLayer, 'RotationThetaWeightLayer': utils.RotationThetaWeightLayer, "Last_Sigmoid":Last_Sigmoid, "Mil_Attention":Mil_Attention}
