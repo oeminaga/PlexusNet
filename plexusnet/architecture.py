@@ -711,6 +711,5 @@ class SupervisedContrastiveLoss(keras.losses.Loss):
             tf.matmul(
                 feature_vectors_normalized, tf.transpose(feature_vectors_normalized)
             ),
-            temperature,
-        )
+            temperature,)
         return tfa.losses.npairs_loss(tf.squeeze(labels), logits)
