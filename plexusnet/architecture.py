@@ -80,7 +80,8 @@ class PlexusNet():
             x_x=data_augmentation(x)
         else:
             x_x=x
-	if self.propogate_img:
+        
+	if propogate_img:
 	    x_a = layers.experimental.preprocessing.RandomRotation(0.1)(x_x)
             x_b = layers.experimental.preprocessing.RandomZoom (0.1)(x_x)
             x_c = x_x
