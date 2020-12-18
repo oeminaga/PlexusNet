@@ -407,9 +407,14 @@ class PlexusNet():
         #FC: You can change here whatever you want.
         if self.get_last_conv:
             return y
+        if self.GlobalPooling is None or self.MIL_mode:
+            y = layers.Flatten()(y)
+        elif self.GlobalPooling=="max":
+            y = layers.GlobalMaxPooling2D()(y)
+        elif self.GlobalPooling=="avg":
+            y = layers.GlobalAveragePooling2D()(y)
         #Supervised-Contrastive-Learning
         if self.SCL:
-            y = layers.GlobalAveragePooling2D()(y)
             if self.RunLayerNormalizationInSCL:
                 y = layers.LayerNormalization()(y)
             return y
@@ -421,12 +426,6 @@ class PlexusNet():
             y = layers.LeakyReLU()(x)
             y = layers.Dense(units=self.code_size, activation='linear', name='encoder_embedding')(x)
             return y
-        elif self.GlobalPooling is None or self.MIL_mode:
-            y = layers.Flatten()(y)
-        elif self.GlobalPooling=="max":
-            y = layers.GlobalMaxPooling2D()(y)
-        elif self.GlobalPooling=="avg":
-            y = layers.GlobalAveragePooling2D()(y)
             
         dense_shape = y.shape.as_list()[-1]
         #dense_shape = 1024
