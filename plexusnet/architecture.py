@@ -421,7 +421,7 @@ class PlexusNet():
                 
             for transformer_block in transformer_blocks:
                 y = transformer_block(y)
-            print(y)
+            y=layers.Reshape((dense_shape[1],dense_shape[2],dense_shape[-1]))(y)
         #FC: You can change here whatever you want.
         if self.get_last_conv:
             return y
