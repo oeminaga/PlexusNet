@@ -902,3 +902,13 @@ class TransformerBlock(layers.Layer):
         ffn_output = self.ffn(out1)
         ffn_output = self.dropout2(ffn_output, training=training)
         return self.layernorm2(out1 + ffn_output)
+    def get_config(self):
+        conifg = super().get_config().copy()
+        config.update({"att": self.att,
+            "ffn": self.ffn,
+            "layernorm1" : self.layernorm1,
+            "layernorm2" : self.layernorm2,
+            "dropout1" : self.dropout1,
+            "dropout2" : self.dropout2
+            })
+        return config
