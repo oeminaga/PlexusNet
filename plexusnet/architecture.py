@@ -411,6 +411,7 @@ class PlexusNet():
             dense_shape = y.shape.as_list()
             num_heads = Configuration["num_heads"]
             y=layers.Reshape((dense_shape[1]*dense_shape[2],dense_shape[3]))(y)
+            print(y)
             embed_dim=y.shape.as_list()[1]
             ff_dim = y.shape.as_list()[-1]
             transformer_block = TransformerBlock(embed_dim, num_heads, ff_dim)
