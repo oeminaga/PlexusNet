@@ -831,7 +831,7 @@ class Distiller(keras.Model):
 
 #Transformer sectopn
 class MultiHeadSelfAttention(layers.Layer):
-    def __init__(self,embed_dim, num_heads=8,name=None,**kwargs):
+    def __init__(self,embed_dim, num_heads=8,**kwargs):
         super(MultiHeadSelfAttention, self).__init__()
         self.embed_dim = embed_dim
         self.num_heads = num_heads
