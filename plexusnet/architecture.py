@@ -416,6 +416,7 @@ class PlexusNet():
             ff_dim = y.shape.as_list()[-1]
             transformer_block = TransformerBlock(embed_dim, num_heads, ff_dim)
             y = transformer_block(y)
+            print(y)
         #FC: You can change here whatever you want.
         if self.get_last_conv:
             return y
@@ -457,7 +458,10 @@ class PlexusNet():
             y = layers.Dense(self.n_class,activation=self.final_activation)(y_)
             return y
         else:
-            y = layers.Dense(dense_shape, activation= 'selu')(y)
+            if self.ApplyTransformer:
+                y = layers.Dense(dense_shape, activation=tfa.activations.gelu)(y)
+            else:
+                y = layers.Dense(dense_shape, activation= 'selu')(y)
         y = layers.Dense(self.n_class, activation=self.final_activation)(y)
         return y
     def Save(self, filename):
