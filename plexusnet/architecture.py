@@ -831,8 +831,8 @@ class Distiller(keras.Model):
 
 #Transformer sectopn
 class MultiHeadSelfAttention(layers.Layer):
-    def __init__(self, trainable, name, dtype, dynamic, embed_dim, num_heads=8,**kwargs):
-        super(MultiHeadSelfAttention, self).__init__(trainable=trainable, name=name, dtype=dtype, dynamic=dynamic, **kwargs)
+    def __init__(self,embed_dim, num_heads=8,name=None,**kwargs):
+        super(MultiHeadSelfAttention, self).__init__()
         self.embed_dim = embed_dim
         self.num_heads = num_heads
         if embed_dim % num_heads != 0:
@@ -844,6 +844,7 @@ class MultiHeadSelfAttention(layers.Layer):
         self.key_dense = layers.Dense(embed_dim)
         self.value_dense = layers.Dense(embed_dim)
         self.combine_heads = layers.Dense(embed_dim)
+        self.name = name
 
     def attention(self, query, key, value):
         score = tf.matmul(query, key, transpose_b=True)
@@ -891,11 +892,12 @@ class MultiHeadSelfAttention(layers.Layer):
             "query_dense" : self.query_dense,
             "key_dense" : self.key_dense,
             "value_dense" : self.value_dense,
-            "combine_heads" : self.combine_heads})
+            "combine_heads" : self.combine_heads,
+            "name" : self.name})
         return config
 class TransformerBlock(layers.Layer):
-    def __init__(self, trainable, name, dtype, dynamic, embed_dim, num_heads, ff_dim, rate=0.1, **kwargs):
-        super(TransformerBlock, self).__init__(trainable, name, dtype, dynamic, **kwargs)
+    def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1,name=None,  **kwargs):
+        super(TransformerBlock, self).__init__()
         self.att = MultiHeadSelfAttention(embed_dim, num_heads)
         self.ffn = keras.Sequential(
             [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim),]
@@ -904,6 +906,7 @@ class TransformerBlock(layers.Layer):
         self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)
         self.dropout1 = layers.Dropout(rate)
         self.dropout2 = layers.Dropout(rate)
+        self.name =name
 
     def call(self, inputs, training):
         attn_output = self.att(inputs)
@@ -919,6 +922,7 @@ class TransformerBlock(layers.Layer):
             "layernorm1" : self.layernorm1,
             "layernorm2" : self.layernorm2,
             "dropout1" : self.dropout1,
-            "dropout2" : self.dropout2
+            "dropout2" : self.dropout2,
+            "name" : self.name
             })
         return config
