@@ -167,10 +167,10 @@ class PlexusNet():
                 x_y = layers.BatchNormalization(scale=False)(x_y)
             x_y = layers.Activation('relu')(x_y)
         if type_of_block=="resnet":
-            x_y = conv_block(x, 3, [initial_filter, int(round(initial_filter*1.5)), initial_filter*2], stage=stage, block='a', strides=(1, 1))
-            x_y = identity_block(x_y, 3, [initial_filter, int(round(initial_filter*2)), initial_filter*2], stage=stage, block='b')
-            x_y = identity_block(x_y, 3, [initial_filter, int(round(initial_filter*2)), initial_filter*2], stage=stage, block='c')
-            x_y = identity_block(x_y, 3, [initial_filter, int(round(initial_filter*1.5)), initial_filter*2], stage=stage, block='d')
+            x_y = conv_block(x, 3, [initial_filter, int(round(initial_filter*1.5)), initial_filter*1], stage=stage, block='a', strides=(1, 1))
+            x_y = identity_block(x_y, 3, [initial_filter, int(round(initial_filter*1)), initial_filter*1], stage=stage, block='b')
+            x_y = identity_block(x_y, 3, [initial_filter, int(round(initial_filter*1)), initial_filter*1], stage=stage, block='c')
+            x_y = identity_block(x_y, 3, [initial_filter, int(round(initial_filter*1.5)), initial_filter*1], stage=stage, block='d')
         if type_of_block=="vgg":
             x_y = layers.Conv2D(int(round(initial_filter)), (1,1),kernel_initializer=initializers.he_normal(seed=seed+8), kernel_regularizer=kernel_regularizer, padding='same')(x)
             x_y = layers.Conv2D(int(round(initial_filter*1.5)), (3,3),kernel_initializer=initializers.glorot_normal(seed=seed+10),kernel_regularizer=kernel_regularizer, padding='same')(x_y)
@@ -831,8 +831,8 @@ class Distiller(keras.Model):
 
 #Transformer sectopn
 class MultiHeadSelfAttention(layers.Layer):
-    def __init__(self, embed_dim, num_heads=8):
-        super(MultiHeadSelfAttention, self).__init__()
+    def __init__(self, trainable, name, dtype, dynamic, embed_dim, num_heads=8,**kwargs):
+        super(MultiHeadSelfAttention, self).__init__(trainable=trainable, name=name, dtype=dtype, dynamic=dynamic, **kwargs)
         self.embed_dim = embed_dim
         self.num_heads = num_heads
         if embed_dim % num_heads != 0:
@@ -894,8 +894,8 @@ class MultiHeadSelfAttention(layers.Layer):
             "combine_heads" : self.combine_heads})
         return config
 class TransformerBlock(layers.Layer):
-    def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
-        super(TransformerBlock, self).__init__()
+    def __init__(self, trainable, name, dtype, dynamic, embed_dim, num_heads, ff_dim, rate=0.1, **kwargs):
+        super(TransformerBlock, self).__init__(trainable, name, dtype, dynamic, **kwargs)
         self.att = MultiHeadSelfAttention(embed_dim, num_heads)
         self.ffn = keras.Sequential(
             [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim),]
