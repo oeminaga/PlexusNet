@@ -21,16 +21,17 @@ from tensorflow.keras import layers
 import tensorflow_addons as tfa
 
 def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="categorical_crossentropy"):
-    custom_objects_internal = {'JunctionWeightLayer':utils.JunctionWeightLayer, 'RotationThetaWeightLayer': utils.RotationThetaWeightLayer, "Last_Sigmoid":Last_Sigmoid, "Mil_Attention":Mil_Attention, "RandomFourierFeatures": RandomFourierFeatures, "UnitNormLayer":UnitNormLayer}
+    custom_objects_internal = {'JunctionWeightLayer':utils.JunctionWeightLayer, 'RotationThetaWeightLayer': utils.RotationThetaWeightLayer, "Last_Sigmoid":Last_Sigmoid, "Mil_Attention":Mil_Attention, "RandomFourierFeatures": RandomFourierFeatures, "UnitNormLayer":UnitNormLayer, "MultiHeadSelfAttention":MultiHeadSelfAttention, "TransformerBlock":TransformerBlock}
     for  key in custom_objects:
         custom_objects_internal[key]=custom_objects[key]
 
     model_=load_model(filename, custom_objects=custom_objects_internal, compile=False)
     model_.compile(optimizer=optimizer, metrics=[""], loss=loss)
     return model_
-    
+Configuration={}
+Configuration["num_heads"]=4
 class PlexusNet():
-    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max", RunLayerNormalizationInSCL=True, propogate_img=False,apply_augmentation=False):
+    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max", RunLayerNormalizationInSCL=True, ApplyTransformer=False, propogate_img=False,apply_augmentation=False):
         """
         Architecture hyperparameter are:
         initial_filter (Default: 2)
@@ -69,6 +70,7 @@ class PlexusNet():
         self.useGated = MIL_useGated
         self.MIL_CONV_mode = MIL_CONV_mode
         self.apply_RandomFourierFeatures = apply_RandomFourierFeatures
+        self.ApplyTransformer = ApplyTransformer
         shape_default  = (self.input_shape[0], self.input_shape[1], self.number_input_channel)
         x = layers.Input(shape=shape_default)
         if self.apply_augmentation:
@@ -404,6 +406,15 @@ class PlexusNet():
             y = layers.concatenate(last_connection)
         else:
             raise NameError('Please specify the arguments including junction_only_the_last_layers, random_junctions')
+        #Apply Transformer
+        if self.ApplyTransformer:
+            dense_shape = y.shape.as_list()
+            num_heads = Configuration["num_heads"]
+            y=layers.Reshape((dense_shape[1]*dense_shape[2],dense_shape[3]))(y)
+            embed_dim=y.shape.as_list()
+            ff_dim = y.shape.as_list()[-1]
+            transformer_block = TransformerBlock(embed_dim, num_heads, ff_dim)
+            y = transformer_block(y)
         #FC: You can change here whatever you want.
         if self.get_last_conv:
             return y
@@ -413,6 +424,7 @@ class PlexusNet():
             y = layers.GlobalMaxPooling2D()(y)
         elif self.GlobalPooling=="avg":
             y = layers.GlobalAveragePooling2D()(y)
+
         #Supervised-Contrastive-Learning
         if self.SCL:
             if self.RunLayerNormalizationInSCL:
@@ -805,3 +817,78 @@ class Distiller(keras.Model):
         results = {m.name: m.result() for m in self.metrics}
         results.update({"student_loss": student_loss})
         return results
+
+
+#Transformer sectopn
+class MultiHeadSelfAttention(layers.Layer):
+    def __init__(self, embed_dim, num_heads=8):
+        super(MultiHeadSelfAttention, self).__init__()
+        self.embed_dim = embed_dim
+        self.num_heads = num_heads
+        if embed_dim % num_heads != 0:
+            raise ValueError(
+                f"embedding dimension = {embed_dim} should be divisible by number of heads = {num_heads}"
+            )
+        self.projection_dim = embed_dim // num_heads
+        self.query_dense = layers.Dense(embed_dim)
+        self.key_dense = layers.Dense(embed_dim)
+        self.value_dense = layers.Dense(embed_dim)
+        self.combine_heads = layers.Dense(embed_dim)
+
+    def attention(self, query, key, value):
+        score = tf.matmul(query, key, transpose_b=True)
+        dim_key = tf.cast(tf.shape(key)[-1], tf.float32)
+        scaled_score = score / tf.math.sqrt(dim_key)
+        weights = tf.nn.softmax(scaled_score, axis=-1)
+        output = tf.matmul(weights, value)
+        return output, weights
+
+    def separate_heads(self, x, batch_size):
+        x = tf.reshape(x, (batch_size, -1, self.num_heads, self.projection_dim))
+        return tf.transpose(x, perm=[0, 2, 1, 3])
+
+    def call(self, inputs):
+        # x.shape = [batch_size, seq_len, embedding_dim]
+        batch_size = tf.shape(inputs)[0]
+        query = self.query_dense(inputs)  # (batch_size, seq_len, embed_dim)
+        key = self.key_dense(inputs)  # (batch_size, seq_len, embed_dim)
+        value = self.value_dense(inputs)  # (batch_size, seq_len, embed_dim)
+        query = self.separate_heads(
+            query, batch_size
+        )  # (batch_size, num_heads, seq_len, projection_dim)
+        key = self.separate_heads(
+            key, batch_size
+        )  # (batch_size, num_heads, seq_len, projection_dim)
+        value = self.separate_heads(
+            value, batch_size
+        )  # (batch_size, num_heads, seq_len, projection_dim)
+        attention, weights = self.attention(query, key, value)
+        attention = tf.transpose(
+            attention, perm=[0, 2, 1, 3]
+        )  # (batch_size, seq_len, num_heads, projection_dim)
+        concat_attention = tf.reshape(
+            attention, (batch_size, -1, self.embed_dim)
+        )  # (batch_size, seq_len, embed_dim)
+        output = self.combine_heads(
+            concat_attention
+        )  # (batch_size, seq_len, embed_dim)
+        return output
+class TransformerBlock(layers.Layer):
+    def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
+        super(TransformerBlock, self).__init__()
+        self.att = MultiHeadSelfAttention(embed_dim, num_heads)
+        self.ffn = keras.Sequential(
+            [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim),]
+        )
+        self.layernorm1 = layers.LayerNormalization(epsilon=1e-6)
+        self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)
+        self.dropout1 = layers.Dropout(rate)
+        self.dropout2 = layers.Dropout(rate)
+
+    def call(self, inputs, training):
+        attn_output = self.att(inputs)
+        attn_output = self.dropout1(attn_output, training=training)
+        out1 = self.layernorm1(inputs + attn_output)
+        ffn_output = self.ffn(out1)
+        ffn_output = self.dropout2(ffn_output, training=training)
+        return self.layernorm2(out1 + ffn_output)
