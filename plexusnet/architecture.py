@@ -883,6 +883,16 @@ class MultiHeadSelfAttention(layers.Layer):
             concat_attention
         )  # (batch_size, seq_len, embed_dim)
         return output
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({"embed_dim": self.embed_dim,
+            "num_heads": self.num_heads,
+            "projection_dim" : self.projection_dim,
+            "query_dense" : self.query_dense,
+            "key_dense" : self.key_dense,
+            "value_dense" : self.value_dense,
+            "combine_heads" : self.combine_heads})
+        return config
 class TransformerBlock(layers.Layer):
     def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
         super(TransformerBlock, self).__init__()
