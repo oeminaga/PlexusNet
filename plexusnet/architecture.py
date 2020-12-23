@@ -918,14 +918,15 @@ class TransformerBlock(layers.Layer):
         return self.layernorm2(out1 + ffn_output)
     def get_config(self):
         config = super().get_config().copy()
-        config.update({"att": self.att,
-            "ffn": self.ffn,
+        config.update({
+            #"att": self.att,
+            #"ffn": self.ffn,
             "embed_dim": self.embed_dim,
             "ff_dim" : self.ff_dim,
-            "num_heads" : self.num_heads,
-            "layernorm1" : self.layernorm1,
-            "layernorm2" : self.layernorm2,
-            "dropout1" : self.dropout1,
-            "dropout2" : self.dropout2
+            "num_heads" : self.num_heads
+            #"layernorm1" : self.layernorm1,
+            #"layernorm2" : self.layernorm2,
+            #"dropout1" : self.dropout1,
+            #"dropout2" : self.dropout2
             })
         return config
