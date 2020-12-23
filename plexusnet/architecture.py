@@ -896,6 +896,9 @@ class MultiHeadSelfAttention(layers.Layer):
         return config
 class TransformerBlock(layers.Layer):
     def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1, **kwargs):
+        self.embed_dim=embed_dim
+        self.ff_dim = ff_dim
+        self.num_heads=num_heads
         self.att = MultiHeadSelfAttention(embed_dim, num_heads)
         self.ffn = keras.Sequential(
             [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim),]
@@ -917,6 +920,9 @@ class TransformerBlock(layers.Layer):
         config = super().get_config().copy()
         config.update({"att": self.att,
             "ffn": self.ffn,
+            "embed_dim": self.embed_dim,
+            "ff_dim" : self.ff_dim,
+            "num_heads" : self.num_heads,
             "layernorm1" : self.layernorm1,
             "layernorm2" : self.layernorm2,
             "dropout1" : self.dropout1,
