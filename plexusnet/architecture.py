@@ -887,7 +887,7 @@ class MultiHeadSelfAttention(layers.Layer):
         config = super().get_config().copy()
         config.update({"embed_dim": self.embed_dim,
             "num_heads": self.num_heads,
-            "projection_dim" : self.projection_dim,
+            #"projection_dim" : self.projection_dim,
             "query_dense" : self.query_dense,
             "key_dense" : self.key_dense,
             "value_dense" : self.value_dense,
