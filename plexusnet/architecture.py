@@ -832,6 +832,7 @@ class Distiller(keras.Model):
 #Transformer sectopn
 class MultiHeadSelfAttention(layers.Layer):
     def __init__(self,embed_dim, num_heads=8,**kwargs):
+        super(MultiHeadSelfAttention, self).__init__(**kwargs)
         self.embed_dim = embed_dim
         self.num_heads = num_heads
         if embed_dim % num_heads != 0:
@@ -843,7 +844,7 @@ class MultiHeadSelfAttention(layers.Layer):
         self.key_dense = layers.Dense(embed_dim)
         self.value_dense = layers.Dense(embed_dim)
         self.combine_heads = layers.Dense(embed_dim)
-        super(MultiHeadSelfAttention, self).__init__(**kwargs)
+        
 
     def attention(self, query, key, value):
         score = tf.matmul(query, key, transpose_b=True)
@@ -896,6 +897,7 @@ class MultiHeadSelfAttention(layers.Layer):
         return config
 class TransformerBlock(layers.Layer):
     def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1, **kwargs):
+        super(TransformerBlock, self).__init__(**kwargs)
         self.embed_dim=embed_dim
         self.ff_dim = ff_dim
         self.num_heads=num_heads
@@ -907,7 +909,6 @@ class TransformerBlock(layers.Layer):
         self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)
         self.dropout1 = layers.Dropout(rate)
         self.dropout2 = layers.Dropout(rate)
-        super(TransformerBlock, self).__init__(**kwargs)
 
     def call(self, inputs, training):
         attn_output = self.att(inputs)
