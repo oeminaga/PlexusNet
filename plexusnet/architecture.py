@@ -260,6 +260,7 @@ class PlexusNet():
         x = x_input
         if self.lanewise_augmentation:
             _c = random.choice(list(range(0,4)))
+            print(_c)
             x = self.data_augmentation[_c](x)
         for i in range(depth):
             x = self._conv_block(x, filter*(i+1)+2, reduction_channel_ratio=compression, kernel_regularizer=kernel_regularizer, seed=(i+counter), type_of_block=type_of_block, initial_image=initial_image)
