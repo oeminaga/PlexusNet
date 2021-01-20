@@ -258,10 +258,10 @@ class PlexusNet():
     def Spider_Node(self, x_input, filter,compression=0.5, depth=5, kernel_regularizer=regularizers.l2(0.00001), counter=0, type_of_block="inception", initial_image=None):
         node = []
         x = x_input
+        if self.lanewise_augmentation:
+            _c = random.choice(list(range(0,4)))
+            x = self.data_augmentation[_c](x)
         for i in range(depth):
-            if self.lanewise_augmentation:
-                _c = random.choice(list(range(0,4)))
-                x = self.data_augmentation[_c](x)
             x = self._conv_block(x, filter*(i+1)+2, reduction_channel_ratio=compression, kernel_regularizer=kernel_regularizer, seed=(i+counter), type_of_block=type_of_block, initial_image=initial_image)
             node.append(x)
             if self.MIL_mode:
