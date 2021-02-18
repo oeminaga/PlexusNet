@@ -32,7 +32,7 @@ Configuration={}
 Configuration["num_heads"]=4
 Configuration["number_of_transformer_blocks"]=1
 class PlexusNet():
-    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max", RunLayerNormalizationInSCL=True, ApplyTransformer=False, number_of_transformer_blocks=1, propogate_img=False,apply_augmentation=False, lanewise_augmentation=False):
+    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max", RunLayerNormalizationInSCL=True, ApplyTransformer=False, number_of_transformer_blocks=1, propogate_img=False,apply_augmentation=False, lanewise_augmentation=False, ApplyLayerNormalization=False):
         """
         Architecture hyperparameter are:
         initial_filter (Default: 2)
@@ -60,6 +60,7 @@ class PlexusNet():
         self.get_last_conv = get_last_conv
         self.run_all_BN =run_all_BN
         self.MIL_mode=MIL_mode
+	self.ApplyLayerNormalization=ApplyLayerNormalization
         Configuration["number_of_transformer_blocks"]=number_of_transformer_blocks 
         self.RunLayerNormalizationInSCL=RunLayerNormalizationInSCL
         self.apply_augmentation=apply_augmentation
@@ -174,6 +175,8 @@ class PlexusNet():
             x_v_3 = layers.Conv2D(initial_filter, (1,1), kernel_regularizer=kernel_regularizer,padding='same', kernel_initializer=initializers.glorot_uniform(seed=seed+7))(x_v_3)
             
             x_y = layers.Concatenate()([x_v_0, x_v_1_1,x_v_1_2, x_v_2_0,x_v_2_1, x_v_3])
+	    if self.ApplyLayerNormalization:
+		x_y = layers.LayerNormalization(scale=True, center=True)(x_y)
             if self.run_all_BN:
                 x_y = layers.BatchNormalization(scale=False)(x_y)
             x_y = layers.Activation('relu')(x_y)
@@ -181,6 +184,7 @@ class PlexusNet():
             x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (1,1), strides=(1,1), padding='same', kernel_initializer=initializers.he_uniform(seed=seed+8))(x_y)
             if self.run_all_BN:
                 x_y = layers.BatchNormalization(scale=False)(x_y)
+	    
             x_y = layers.Activation('relu')(x_y)
         if type_of_block=="resnet":
             x_y = conv_block(x, 3, [initial_filter, int(round(initial_filter*1.5)), initial_filter*1], stage=stage, block='a', strides=(1, 1))
