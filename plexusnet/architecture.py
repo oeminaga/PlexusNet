@@ -39,7 +39,7 @@ class PlexusNet():
         length (Default: 2)
         depth (Default: 7)
         junction (Default: 3)
-        
+        Multiple configurations are available
         You can modify or search the optimal architecture using these hyperparameters. Please be advised that the training set should be representative of different variation to build sophisticated models.
 
         """
