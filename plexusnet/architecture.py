@@ -60,7 +60,7 @@ class PlexusNet():
         self.get_last_conv = get_last_conv
         self.run_all_BN =run_all_BN
         self.MIL_mode=MIL_mode
-	self.ApplyLayerNormalization=ApplyLayerNormalization
+        self.ApplyLayerNormalization=ApplyLayerNormalization
         Configuration["number_of_transformer_blocks"]=number_of_transformer_blocks 
         self.RunLayerNormalizationInSCL=RunLayerNormalizationInSCL
         self.apply_augmentation=apply_augmentation
