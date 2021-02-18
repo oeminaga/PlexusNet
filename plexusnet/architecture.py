@@ -175,8 +175,8 @@ class PlexusNet():
             x_v_3 = layers.Conv2D(initial_filter, (1,1), kernel_regularizer=kernel_regularizer,padding='same', kernel_initializer=initializers.glorot_uniform(seed=seed+7))(x_v_3)
             
             x_y = layers.Concatenate()([x_v_0, x_v_1_1,x_v_1_2, x_v_2_0,x_v_2_1, x_v_3])
-	    if self.ApplyLayerNormalization:
-		x_y = layers.LayerNormalization(scale=True, center=True)(x_y)
+            if self.ApplyLayerNormalization:
+                x_y = layers.LayerNormalization(scale=True, center=True)(x_y)
             if self.run_all_BN:
                 x_y = layers.BatchNormalization(scale=False)(x_y)
             x_y = layers.Activation('relu')(x_y)
