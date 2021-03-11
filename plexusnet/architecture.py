@@ -359,7 +359,10 @@ class PlexusNet():
 
         #Generate nodes
         for i in range(length):
-            nodes.append(self.Spider_Node(x, initial_filter, compression,depth, kernel_regularizer, counter=i, type_of_block=type_of_block, initial_image=initial_image))
+            vb = self.Spider_Node(x, initial_filter, compression,depth, kernel_regularizer, counter=i, type_of_block=type_of_block, initial_image=initial_image)
+	    for j, layer in enumerate(vb.layers):
+		layer._name = f"C_{i}_{layer.name}"
+            nodes.append(vb)
 
         #Generate Connection between Nodes
         #Generate the junctions between nodes
