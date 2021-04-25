@@ -1,6 +1,7 @@
 """
 Copyright by Okyaz Eminaga. 2020
 """
+import math, os, re, warnings, random, time
 from tensorflow.keras import layers, models,optimizers
 from tensorflow.keras.layers import LeakyReLU
 import keras.backend as K
@@ -19,6 +20,213 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow_addons as tfa
+import numpy as np
+
+# Mixed precision
+from tensorflow.keras.mixed_precision import experimental as mixed_precision
+def seed_everything(seed=0):
+    random.seed(seed)
+    np.random.seed(seed)
+    tf.random.set_seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    os.environ['TF_DETERMINISTIC_OPS'] = '1'
+
+seed = 0
+seed_everything(seed)
+warnings.filterwarnings('ignore')
+
+HEIGHT = 512
+WIDTH = 512
+CHANNELS = 3
+AUTO = tf.data.experimental.AUTOTUNE
+REPLICAS = strategy.num_replicas_in_sync
+
+def transform_rotation(image, height, rotation):
+    # input image - is one image of size [dim,dim,3] not a batch of [b,dim,dim,3]
+    # output - image randomly rotated
+    DIM = height
+    XDIM = DIM%2 #fix for size 331
+    
+    rotation = rotation * tf.random.uniform([1],dtype='float32')
+    # CONVERT DEGREES TO RADIANS
+    rotation = math.pi * rotation / 180.
+    
+    # ROTATION MATRIX
+    c1 = tf.math.cos(rotation)
+    s1 = tf.math.sin(rotation)
+    one = tf.constant([1],dtype='float32')
+    zero = tf.constant([0],dtype='float32')
+    rotation_matrix = tf.reshape(tf.concat([c1,s1,zero, -s1,c1,zero, zero,zero,one],axis=0),[3,3])
+
+    # LIST DESTINATION PIXEL INDICES
+    x = tf.repeat( tf.range(DIM//2,-DIM//2,-1), DIM )
+    y = tf.tile( tf.range(-DIM//2,DIM//2),[DIM] )
+    z = tf.ones([DIM*DIM],dtype='int32')
+    idx = tf.stack( [x,y,z] )
+    
+    # ROTATE DESTINATION PIXELS ONTO ORIGIN PIXELS
+    idx2 = K.dot(rotation_matrix,tf.cast(idx,dtype='float32'))
+    idx2 = K.cast(idx2,dtype='int32')
+    idx2 = K.clip(idx2,-DIM//2+XDIM+1,DIM//2)
+    
+    # FIND ORIGIN PIXEL VALUES 
+    idx3 = tf.stack( [DIM//2-idx2[0,], DIM//2-1+idx2[1,]] )
+    d = tf.gather_nd(image, tf.transpose(idx3))
+        
+    return tf.reshape(d,[DIM,DIM,3])
+
+def transform_shear(image, height, shear):
+    # input image - is one image of size [dim,dim,3] not a batch of [b,dim,dim,3]
+    # output - image randomly sheared
+    DIM = height
+    XDIM = DIM%2 #fix for size 331
+    
+    shear = shear * tf.random.uniform([1],dtype='float32')
+    shear = math.pi * shear / 180.
+        
+    # SHEAR MATRIX
+    one = tf.constant([1],dtype='float32')
+    zero = tf.constant([0],dtype='float32')
+    c2 = tf.math.cos(shear)
+    s2 = tf.math.sin(shear)
+    shear_matrix = tf.reshape(tf.concat([one,s2,zero, zero,c2,zero, zero,zero,one],axis=0),[3,3])    
+
+    # LIST DESTINATION PIXEL INDICES
+    x = tf.repeat( tf.range(DIM//2,-DIM//2,-1), DIM )
+    y = tf.tile( tf.range(-DIM//2,DIM//2),[DIM] )
+    z = tf.ones([DIM*DIM],dtype='int32')
+    idx = tf.stack( [x,y,z] )
+    
+    # ROTATE DESTINATION PIXELS ONTO ORIGIN PIXELS
+    idx2 = K.dot(shear_matrix,tf.cast(idx,dtype='float32'))
+    idx2 = K.cast(idx2,dtype='int32')
+    idx2 = K.clip(idx2,-DIM//2+XDIM+1,DIM//2)
+    
+    # FIND ORIGIN PIXEL VALUES 
+    idx3 = tf.stack( [DIM//2-idx2[0,], DIM//2-1+idx2[1,]] )
+    d = tf.gather_nd(image, tf.transpose(idx3))
+        
+    return tf.reshape(d,[DIM,DIM,3])
+
+# CutOut
+def data_augment_cutout(image, min_mask_size=(int(HEIGHT * .1), int(HEIGHT * .1)), 
+                        max_mask_size=(int(HEIGHT * .125), int(HEIGHT * .125))):
+    p_cutout = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
+    
+    if p_cutout > .85: # 10~15 cut outs
+        n_cutout = tf.random.uniform([], 10, 15, dtype=tf.int32)
+        image = random_cutout(image, HEIGHT, WIDTH, 
+                              min_mask_size=min_mask_size, max_mask_size=max_mask_size, k=n_cutout)
+    elif p_cutout > .6: # 5~10 cut outs
+        n_cutout = tf.random.uniform([], 5, 10, dtype=tf.int32)
+        image = random_cutout(image, HEIGHT, WIDTH, 
+                              min_mask_size=min_mask_size, max_mask_size=max_mask_size, k=n_cutout)
+    elif p_cutout > .25: # 2~5 cut outs
+        n_cutout = tf.random.uniform([], 2, 5, dtype=tf.int32)
+        image = random_cutout(image, HEIGHT, WIDTH, 
+                              min_mask_size=min_mask_size, max_mask_size=max_mask_size, k=n_cutout)
+    else: # 1 cut out
+        image = random_cutout(image, HEIGHT, WIDTH, 
+                              min_mask_size=min_mask_size, max_mask_size=max_mask_size, k=1)
+
+    return image
+
+def random_cutout(image, height, width, channels=3, min_mask_size=(10, 10), max_mask_size=(80, 80), k=1):
+    assert height > min_mask_size[0]
+    assert width > min_mask_size[1]
+    assert height > max_mask_size[0]
+    assert width > max_mask_size[1]
+
+    for i in range(k):
+      mask_height = tf.random.uniform(shape=[], minval=min_mask_size[0], maxval=max_mask_size[0], dtype=tf.int32)
+      mask_width = tf.random.uniform(shape=[], minval=min_mask_size[1], maxval=max_mask_size[1], dtype=tf.int32)
+
+      pad_h = height - mask_height
+      pad_top = tf.random.uniform(shape=[], minval=0, maxval=pad_h, dtype=tf.int32)
+      pad_bottom = pad_h - pad_top
+
+      pad_w = width - mask_width
+      pad_left = tf.random.uniform(shape=[], minval=0, maxval=pad_w, dtype=tf.int32)
+      pad_right = pad_w - pad_left
+
+      cutout_area = tf.zeros(shape=[mask_height, mask_width, channels], dtype=tf.uint8)
+
+      cutout_mask = tf.pad([cutout_area], [[0,0],[pad_top, pad_bottom], [pad_left, pad_right], [0,0]], constant_values=1)
+      cutout_mask = tf.squeeze(cutout_mask, axis=0)
+      image = tf.multiply(tf.cast(image, tf.float32), tf.cast(cutout_mask, tf.float32))
+
+    return image
+def data_augment(image, label):
+    p_rotation = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
+    p_spatial = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
+    p_rotate = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
+    p_pixel_1 = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
+    p_pixel_2 = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
+    p_pixel_3 = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
+    p_shear = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
+    p_crop = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
+    p_cutout = tf.random.uniform([], 0, 1.0, dtype=tf.float32)
+    
+    # Shear
+    if p_shear > .2:
+        if p_shear > .6:
+            image = transform_shear(image, HEIGHT, shear=20.)
+        else:
+            image = transform_shear(image, HEIGHT, shear=-20.)
+            
+    # Rotation
+    if p_rotation > .2:
+        if p_rotation > .6:
+            image = transform_rotation(image, HEIGHT, rotation=45.)
+        else:
+            image = transform_rotation(image, HEIGHT, rotation=-45.)
+            
+    # Flips
+    image = tf.image.random_flip_left_right(image)
+    image = tf.image.random_flip_up_down(image)
+    if p_spatial > .75:
+        image = tf.image.transpose(image)
+        
+    # Rotates
+    if p_rotate > .75:
+        image = tf.image.rot90(image, k=3) # rotate 270º
+    elif p_rotate > .5:
+        image = tf.image.rot90(image, k=2) # rotate 180º
+    elif p_rotate > .25:
+        image = tf.image.rot90(image, k=1) # rotate 90º
+        
+    # Pixel-level transforms
+    if p_pixel_1 >= .4:
+        image = tf.image.random_saturation(image, lower=.7, upper=1.3)
+    if p_pixel_2 >= .4:
+        image = tf.image.random_contrast(image, lower=.8, upper=1.2)
+    if p_pixel_3 >= .4:
+        image = tf.image.random_brightness(image, max_delta=.1)
+        
+    # Crops
+    if p_crop > .6:
+        if p_crop > .9:
+            image = tf.image.central_crop(image, central_fraction=.5)
+        elif p_crop > .8:
+            image = tf.image.central_crop(image, central_fraction=.6)
+        elif p_crop > .7:
+            image = tf.image.central_crop(image, central_fraction=.7)
+        else:
+            image = tf.image.central_crop(image, central_fraction=.8)
+    elif p_crop > .3:
+        crop_size = tf.random.uniform([], int(HEIGHT*.6), HEIGHT, dtype=tf.int32)
+        image = tf.image.random_crop(image, size=[crop_size, crop_size, CHANNELS])
+            
+    image = tf.image.resize(image, size=[HEIGHT, WIDTH])
+
+    if p_cutout > .5:
+        image = data_augment_cutout(image)
+        
+    return image, label
+
+
+
+
 
 def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="categorical_crossentropy"):
     custom_objects_internal = {'JunctionWeightLayer':utils.JunctionWeightLayer, 'RotationThetaWeightLayer': utils.RotationThetaWeightLayer, "Last_Sigmoid":Last_Sigmoid, "Mil_Attention":Mil_Attention, "RandomFourierFeatures": RandomFourierFeatures, "UnitNormLayer":UnitNormLayer, "MultiHeadSelfAttention":MultiHeadSelfAttention, "TransformerBlock":TransformerBlock}
@@ -31,8 +239,13 @@ def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="ca
 Configuration={}
 Configuration["num_heads"]=4
 Configuration["number_of_transformer_blocks"]=1
+def network_autoregressive(x):
+
+    ''' Define the network that integrates information along the sequence '''
+    x = tf.keras.layers.GRU(units=256, return_sequences=False)(x)
+    return x
 class PlexusNet():
-    def __init__(self, input_shape=(512,512), initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max", RunLayerNormalizationInSCL=True, ApplyTransformer=False, number_of_transformer_blocks=1, propogate_img=False,apply_augmentation=False, lanewise_augmentation=False, ApplyLayerNormalization=False):
+    def __init__(self, input_shape=(512,512), number_inputs=1,initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max", RunLayerNormalizationInSCL=True, ApplyTransformer=False, number_of_transformer_blocks=1, propogate_img=False,apply_augmentation=False, lanewise_augmentation=False, ApplyLayerNormalization=False):
         """
         Architecture hyperparameter are:
         initial_filter (Default: 2)
@@ -43,7 +256,14 @@ class PlexusNet():
         You can modify or search the optimal architecture using these hyperparameters. Please be advised that the training set should be representative of different variation to build sophisticated models.
 
         """
+        policy = mixed_precision.Policy('mixed_bfloat16')
+        mixed_precision.set_policy(policy)
+
+        # XLA
+        tf.config.optimizer.set_jit(True)
         self.input_shape= input_shape
+        HEIGHT = self.input_shape[1]
+        WIDTH = self.input_shape[0]
         self.n_class = n_class
         self.lanewise_augmentation = lanewise_augmentation
         self.initial_filter=initial_filter
@@ -51,7 +271,7 @@ class PlexusNet():
         self.depth =depth
         self.junction = junction
         self.propogate_img=propogate_img
-        self.number_input_channel=number_input_channel
+        self.number_input_channel=CHANNELS=number_input_channel
         self.final_activation=final_activation
         self.compression_rate = compression_rate
         self.random_junctions =random_junctions
@@ -74,9 +294,16 @@ class PlexusNet():
         self.useGated = MIL_useGated
         self.MIL_CONV_mode = MIL_CONV_mode
         self.apply_RandomFourierFeatures = apply_RandomFourierFeatures
+        self.number_inputs=number_inputs
         self.ApplyTransformer = ApplyTransformer
         shape_default  = (self.input_shape[0], self.input_shape[1], self.number_input_channel)
-        x = layers.Input(shape=shape_default)
+        if number_inputs ==1:
+            x = layers.Input(shape=shape_default)
+        else:
+            x = []
+            for k in range(number_inputs):
+                x.append(layers.Input(shape=shape_default))
+                
         if self.lanewise_augmentation:
             self.data_augmentation = []
             def NoAug(x):
@@ -84,8 +311,8 @@ class PlexusNet():
             self.data_augmentation.append(keras.Sequential([
             layers.experimental.preprocessing.RandomRotation(0.2)]))
             
-            self.data_augmentation.append(keras.Sequential([
-            layers.experimental.preprocessing.RandomContrast(0.1)]))
+            #self.data_augmentation.append(keras.Sequential([
+            #layers.experimental.preprocessing.RandomContrast(0.1)]))
             
             self.data_augmentation.append(NoAug)
             
@@ -360,8 +587,8 @@ class PlexusNet():
         #Generate nodes
         for i in range(length):
             vb = self.Spider_Node(x, initial_filter, compression,depth, kernel_regularizer, counter=i, type_of_block=type_of_block, initial_image=initial_image)
-	    for j, layer in enumerate(vb.layers):
-		layer._name = f"C_{i}_{layer.name}"
+        for j, layer in enumerate(vb.layers):
+            layer._name = f"C_{i}_{layer.name}"
             nodes.append(vb)
 
         #Generate Connection between Nodes
@@ -498,10 +725,7 @@ class PlexusNet():
         return y
     def Save(self, filename):
         self.model.save(filename)
-        print("saved...")
-        
-        
-        
+        print("saved...")              
 from keras.layers import Layer
 from keras import backend as K
 from keras import activations, initializers, regularizers
