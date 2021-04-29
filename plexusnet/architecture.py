@@ -31,7 +31,7 @@ def seed_everything(seed=0):
     os.environ['PYTHONHASHSEED'] = str(seed)
     os.environ['TF_DETERMINISTIC_OPS'] = '1'
 
-seed = 0
+seed = 123
 seed_everything(seed)
 warnings.filterwarnings('ignore')
 
@@ -222,10 +222,6 @@ def data_augment(image, label):
         image = data_augment_cutout(image)
         
     return image, label
-
-
-
-
 
 def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="categorical_crossentropy"):
     custom_objects_internal = {'JunctionWeightLayer':utils.JunctionWeightLayer, 'RotationThetaWeightLayer': utils.RotationThetaWeightLayer, "Last_Sigmoid":Last_Sigmoid, "Mil_Attention":Mil_Attention, "RandomFourierFeatures": RandomFourierFeatures, "UnitNormLayer":UnitNormLayer, "MultiHeadSelfAttention":MultiHeadSelfAttention, "TransformerBlock":TransformerBlock}
@@ -594,6 +590,7 @@ class PlexusNet():
                 if i in self.ApplyLaneForAugmentation:
                     x = self.data_augmentation(tf.cast(x, dtype=tf.float32))
             vb = self.Spider_Node(x, initial_filter, compression,depth, kernel_regularizer, counter=i, type_of_block=type_of_block, initial_image=initial_image)
+            print(vb)
         for j, layer in enumerate(vb.layers):
             layer._name = f"C_{i}_{layer.name}"
             nodes.append(vb)
