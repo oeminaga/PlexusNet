@@ -234,6 +234,14 @@ def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="ca
 Configuration={}
 Configuration["num_heads"]=4
 Configuration["number_of_transformer_blocks"]=1
+
+data_augmentation = keras.Sequential([
+            layers.experimental.preprocessing.RandomFlip("horizontal"),
+            layers.experimental.preprocessing.RandomRotation(0.02),
+            layers.experimental.preprocessing.RandomWidth(0.2),
+            layers.experimental.preprocessing.RandomHeight(0.2),])
+            
+
 def network_autoregressive(x):
 
     ''' Define the network that integrates information along the sequence '''
@@ -316,19 +324,10 @@ class PlexusNet():
             self.data_augmentation.append(keras.Sequential([
             layers.experimental.preprocessing.RandomTranslation(0.2,0.2)]))
             '''
-            self.data_augmentation = keras.Sequential([
-            layers.experimental.preprocessing.RandomFlip("horizontal"),
-            layers.experimental.preprocessing.RandomFlip("vertical"),
-            layers.experimental.preprocessing.RandomRotation(0.1),
-            layers.experimental.preprocessing.RandomZoom (0.1)])
+            self.data_augmentation = data_augmentation
 
 
         if self.apply_augmentation:
-            data_augmentation = keras.Sequential([
-            layers.experimental.preprocessing.RandomFlip("horizontal"),
-            layers.experimental.preprocessing.RandomRotation(0.02),
-            layers.experimental.preprocessing.RandomWidth(0.2),
-            layers.experimental.preprocessing.RandomHeight(0.2),])
             x_x=data_augmentation(x)
         else:
             x_x=x
