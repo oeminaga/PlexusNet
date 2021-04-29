@@ -493,6 +493,8 @@ class PlexusNet():
     def Spider_Node(self, x_input, filter,compression=0.5, depth=5, kernel_regularizer=regularizers.l2(0.00001), counter=0, type_of_block="inception", initial_image=None):
         node = []
         x = x_input
+        #            for j, layer in enumerate(vb):
+        #        vb[j]._name = f"C_{i}_{layer.name}"
         for i in range(depth):
             x = self._conv_block(x, filter*(i+1)+2, reduction_channel_ratio=compression, kernel_regularizer=kernel_regularizer, seed=(i+counter), type_of_block=type_of_block, initial_image=initial_image)
             node.append(x)
@@ -591,8 +593,7 @@ class PlexusNet():
                     x = self.data_augmentation(tf.cast(x, dtype=tf.float32))
             vb = self.Spider_Node(x, initial_filter, compression,depth, kernel_regularizer, counter=i, type_of_block=type_of_block, initial_image=initial_image)
 
-            for j, layer in enumerate(vb):
-                vb[j]._name = f"C_{i}_{layer.name}"
+
             nodes.append(vb)
 
         #Generate Connection between Nodes
