@@ -588,9 +588,10 @@ class PlexusNet():
         for i in range(length):
             if self.lanewise_augmentation:
                 if i in self.ApplyLaneForAugmentation:
+                    x = tf.image.decode_image(x)
                     x = self.data_augmentation(tf.cast(x, dtype=tf.float32))
             vb = self.Spider_Node(x, initial_filter, compression,depth, kernel_regularizer, counter=i, type_of_block=type_of_block, initial_image=initial_image)
-            print(vb)
+
         for j, layer in enumerate(vb):
             layer._name = f"C_{i}_{layer.name}"
             nodes.append(vb)
