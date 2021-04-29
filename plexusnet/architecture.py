@@ -310,8 +310,8 @@ class PlexusNet():
             self.data_augmentation.append(keras.Sequential([
             layers.experimental.preprocessing.RandomRotation(0.2)]))
             
-            #self.data_augmentation.append(keras.Sequential([
-            #layers.experimental.preprocessing.RandomContrast(0.1)]))
+            self.data_augmentation.append(keras.Sequential([
+            layers.experimental.preprocessing.RandomContrast(0.1)]))
             
             self.data_augmentation.append(NoAug)
             
