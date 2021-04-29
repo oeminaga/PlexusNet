@@ -39,7 +39,6 @@ HEIGHT = 512
 WIDTH = 512
 CHANNELS = 3
 AUTO = tf.data.experimental.AUTOTUNE
-REPLICAS = strategy.num_replicas_in_sync
 
 def transform_rotation(image, height, rotation):
     # input image - is one image of size [dim,dim,3] not a batch of [b,dim,dim,3]
