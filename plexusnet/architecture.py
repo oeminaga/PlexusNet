@@ -251,7 +251,7 @@ class PlexusNet():
         You can modify or search the optimal architecture using these hyperparameters. Please be advised that the training set should be representative of different variation to build sophisticated models.
 
         """
-        policy = mixed_precision.Policy('mixed_bfloat16')
+        policy = mixed_precision.Policy('mixed_float16')
         mixed_precision.set_policy(policy)
 
         # XLA
