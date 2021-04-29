@@ -583,7 +583,6 @@ class PlexusNet():
         return np_
     def Core(self, x, initial_filter=32, compression=0.5, length=5, depth=7, center_node_id=0, kernel_regularizer=None,random_junctions=True, number_of_junctions=5, junction_only_the_last_layers=False, type_of_block="inception", initial_image=None):
         nodes = []
-
         #Generate nodes
         for i in range(length):
             if self.lanewise_augmentation:
@@ -594,7 +593,7 @@ class PlexusNet():
 
         for j, layer in enumerate(vb):
             layer._name = f"C_{i}_{layer.name}"
-            nodes.append(vb)
+        nodes.append(vb)
 
         #Generate Connection between Nodes
         #Generate the junctions between nodes
