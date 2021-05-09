@@ -260,8 +260,8 @@ class PlexusNet():
         You can modify or search the optimal architecture using these hyperparameters. Please be advised that the training set should be representative of different variation to build sophisticated models.
 
         """
-        policy = mixed_precision.Policy('mixed_float16')
-        mixed_precision.set_policy(policy)
+        #policy = mixed_precision.Policy('mixed_float16')
+        #mixed_precision.set_policy(policy)
 
         # XLA
         tf.config.optimizer.set_jit(True)
@@ -391,7 +391,7 @@ class PlexusNet():
             x_y = layers.LeakyReLU()(x_y)
             return x_y
         if type_of_block=="bayesian_inception":
-            x= tf.cast(x, tf.float16)
+            #x= tf.cast(x, tf.float16)
             x_v_0=tfp.layers.Convolution2DFlipout(
             initial_filter, kernel_size=1,strides=1, padding='SAME',
             kernel_divergence_fn=self.kl_divergence_function,
