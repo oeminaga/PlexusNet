@@ -391,6 +391,7 @@ class PlexusNet():
             x_y = layers.LeakyReLU()(x_y)
             return x_y
         if type_of_block=="bayesian_inception":
+            x= tf.cast(x, tf.float32)
             x_v_0=tfp.layers.Convolution2DFlipout(
             initial_filter, kernel_size=1,strides=1, padding='SAME',
             kernel_divergence_fn=self.kl_divergence_function,
