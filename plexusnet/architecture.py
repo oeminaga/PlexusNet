@@ -21,6 +21,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow_addons as tfa
 import numpy as np
+import tensorflow_probability as tfp
 
 # Mixed precision
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
@@ -248,7 +249,7 @@ def network_autoregressive(x):
     x = tf.keras.layers.GRU(units=256, return_sequences=False)(x)
     return x
 class PlexusNet():
-    def __init__(self, input_shape=(512,512), number_inputs=1,initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max", RunLayerNormalizationInSCL=True, ApplyTransformer=False, number_of_transformer_blocks=1, propogate_img=False,apply_augmentation=False, lanewise_augmentation=False, ApplyLayerNormalization=False, ApplyLaneForAugmentation=[0]):
+    def __init__(self, input_shape=(512,512), number_inputs=1,initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max", RunLayerNormalizationInSCL=True, ApplyTransformer=False, number_of_transformer_blocks=1, propogate_img=False,apply_augmentation=False, lanewise_augmentation=False, ApplyLayerNormalization=False, ApplyLaneForAugmentation=[0],kl_divergence_function=None):
         """
         Architecture hyperparameter are:
         initial_filter (Default: 2)
@@ -290,6 +291,7 @@ class PlexusNet():
         self.MIL_FC_percentage_of_feature=MIL_FC_percentage_of_feature
         self.SCL=SCL
         self.CPC=CPC
+        self.kl_divergence_function=kl_divergence_function
         self.terms=terms
         self.predict_terms=predict_terms
         self.code_size=code_size
@@ -388,6 +390,38 @@ class PlexusNet():
             x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (1,16), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8),kernel_constraint=min_max_norm(-1,1,rate=0.001))(x_y)
             x_y = layers.LeakyReLU()(x_y)
             return x_y
+        if type_of_block=="bayesian_inception":
+            x_v_0=tfp.layers.Convolution2DFlipout(
+            initial_filter, kernel_size=1,strides=1, padding='SAME',
+            kernel_divergence_fn=self.kl_divergence_function,
+            activation=tf.nn.relu6)(x)
+
+            x_v_1_0 = tfp.layers.Convolution2DFlipout(int(round(initial_filter*1.5)), (1,1), padding='same',kernel_divergence_fn=self.kl_divergence_function)(x)
+            x_v_1_1 = tfp.layers.Convolution2DFlipout(initial_filter, (1,3),padding='same')(x_v_1_0)
+            x_v_1_2 = tfp.layers.Convolution2DFlipout(initial_filter, (3,1),padding='same')(x_v_1_0)
+            
+            x_v_2 = tfp.layers.Convolution2DFlipout(int(round(initial_filter*1.5)), (1,1), padding='same', kernel_divergence_fn=self.kl_divergence_function)(x)
+            x_v_2 = tfp.layers.Convolution2DFlipout(int(round(initial_filter*1.75)), (1,3),padding='same', kernel_divergence_fn=self.kl_divergence_function)(x_v_2)
+            x_v_2 = tfp.layers.Convolution2DFlipout(int(round(initial_filter*2)), (3,1),padding='same',kernel_divergence_fn=self.kl_divergence_function)(x_v_2)
+            x_v_2_0 = tfp.layers.Convolution2DFlipout(initial_filter, (3,1),padding='same', kernel_divergence_fn=self.kl_divergence_function)(x_v_2)
+            x_v_2_1 = tfp.layers.Convolution2DFlipout(initial_filter, (1,3),padding='same', kernel_divergence_fn=self.kl_divergence_function)(x_v_2)
+            
+            x_v_3 = layers.AveragePooling2D((2, 2), strides=(1,1),padding='same')(x)
+            x_v_3 = tfp.layers.Convolution2DFlipout(initial_filter, (1,1), padding='same', kernel_divergence_fn=self.kl_divergence_function)(x_v_3)
+            
+            x_y=layers.Concatenate()([x_v_0, x_v_1_1,x_v_1_2, x_v_2_0,x_v_2_1, x_v_3])
+            if self.ApplyLayerNormalization:
+                x_y = layers.LayerNormalization(scale=True, center=True)(x_y)
+            if self.run_all_BN:
+                x_y = layers.BatchNormalization(scale=False)(x_y)
+            x_y = layers.Activation(tf.nn.relu6)(x_y)
+            shape_c = x_y.shape.as_list()[-1]
+            x_y = tfp.layers.Convolution2DFlipout(int(round(reduction_channel_ratio*float(shape_c))), (1,1), strides=(1,1), padding='same', kernel_divergence_fn=self.kl_divergence_function)(x_y)
+            if self.run_all_BN:
+                x_y = layers.BatchNormalization(scale=False)(x_y)
+	    
+            x_y = layers.Activation(tf.nn.relu6)(x_y)
+
         if type_of_block=="inception":
             x_v_0 = layers.Conv2D(initial_filter, (1,1),kernel_regularizer=kernel_regularizer, padding='same', kernel_initializer=initializers.glorot_uniform(seed=seed))(x)
             
@@ -551,8 +585,8 @@ class PlexusNet():
         for i in range(itm_nbr):
             row = iteration_data[i]
             node_id, level_id, junc_id = row[0], row[1], row[2]
-            print(junctions[junc_id])
-            print(nodes[node_id][level_id])
+            #print(junctions[junc_id])
+            #print(nodes[node_id][level_id])
             nodes[node_id][level_id] = layers.Concatenate()([junctions[junc_id],nodes[node_id][level_id]])
         return nodes
 
@@ -578,7 +612,7 @@ class PlexusNet():
             indexes_selected = random.sample(indexes,number_of_junctions)
             random.seed=None
             np_ = np_[indexes_selected]
-            print(np_.shape)
+            #print(np_.shape)
         return np_
     def Core(self, x, initial_filter=32, compression=0.5, length=5, depth=7, center_node_id=0, kernel_regularizer=None,random_junctions=True, number_of_junctions=5, junction_only_the_last_layers=False, type_of_block="inception", initial_image=None):
         nodes = []
@@ -646,7 +680,7 @@ class PlexusNet():
         elif random_junctions:
             second_nodes = []
             node_id_junctions = iteration_data[:,0].tolist()
-            print(node_id_junctions)
+            #print(node_id_junctions)
             for i in range(length):
                 if i == center_node_id:
                     second_nodes.append(nodes[i])
@@ -657,7 +691,7 @@ class PlexusNet():
                         junction_levels = None
                     second_nodes.append(self.Spider_Node_w_Junction_list(x, nodes[i], initial_filter, compression, depth, junction_levels,kernel_regularizer, counter=i, type_of_block=type_of_block, initial_image=initial_image))
             last_connection = []
-            print(len(second_nodes))
+            #print(len(second_nodes))
             for i in range(length):
                 last_connection.append(second_nodes[i][-1])
             
