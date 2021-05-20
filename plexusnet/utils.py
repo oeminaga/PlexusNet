@@ -1,10 +1,10 @@
 """
 Copyright by Okyaz Eminaga. 2020
 """
-from keras.engine.topology import Layer
-from keras.constraints import min_max_norm
-from keras import layers
-import keras.backend as K
+from tensorflow.keras.layers import Layer
+from tensorflow.keras.constraints import min_max_norm
+from tensorflow.keras import layers
+import tensorflow.keras.backend as K
 from sklearn.manifold import TSNE
 import seaborn as sns
 import numpy as np

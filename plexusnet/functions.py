@@ -3,14 +3,14 @@ Copyright by Okyaz Eminaga. 2020
 """
 import random
 import os
-from keras import layers, models
-from keras.layers.advanced_activations import LeakyReLU
-import keras.backend as K
-from keras.constraints import min_max_norm
-from keras import regularizers, initializers
-from keras.regularizers import l2
+from tensorflow.keras import layers, models
+from tensorflow.keras.layers import LeakyReLU
+import tensorflow.keras.backend as K
+from tensorflow.keras.constraints import min_max_norm
+from tensorflow.keras import regularizers, initializers
+from tensorflow.keras.regularizers import l2
 from . import utils
-from keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D,GlobalAveragePooling2D,Activation, Dropout, Dense, GlobalMaxPooling2D
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D,GlobalAveragePooling2D,Activation, Dropout, Dense, GlobalMaxPooling2D
 
 def ColorIntensityNormalisationSection(x):
     """
