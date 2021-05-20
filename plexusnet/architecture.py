@@ -236,7 +236,7 @@ Configuration={}
 Configuration["num_heads"]=4
 Configuration["number_of_transformer_blocks"]=1
 
-data_augmentation = keras.Sequential([
+data_augmentation = tf.keras.Sequential([
             layers.experimental.preprocessing.RandomFlip("horizontal"),
             layers.experimental.preprocessing.RandomRotation(0.02),
             layers.experimental.preprocessing.RandomWidth(0.2),
@@ -762,14 +762,14 @@ class PlexusNet():
     def Save(self, filename):
         self.model.save(filename)
         print("saved...")              
-from keras.layers import Layer
-from keras import backend as K
-from keras import activations, initializers, regularizers
+from tensorflow.keras.layers import Layer
+from tensorflow.keras import backend as K
+from tensorflow.keras import activations, initializers, regularizers
 def add_projection_head(encoder,input_shape,projection_units):
-    inputs = keras.Input(shape=input_shape)
+    inputs = tensorflow.keras.Input(shape=input_shape)
     features = encoder(inputs)
     outputs = layers.Dense(projection_units, activation="relu")(features)
-    model = keras.Model(
+    model = tf.keras.Model(
         inputs=inputs, outputs=outputs, name="encoder_with_projection-head"
     )
     return model
@@ -1012,7 +1012,7 @@ class UnitNormLayer(layers.Layer):
         norm = tf.norm(input_tensor, axis=1)
         return input_tensor / tf.reshape(norm, [-1, 1])
 
-class SupervisedContrastiveLoss(keras.losses.Loss):
+class SupervisedContrastiveLoss(tf.keras.losses.Loss):
     def __init__(self, temperature=1, name=None):
         super(SupervisedContrastiveLoss, self).__init__(name=name)
         self.temperature = temperature
@@ -1027,7 +1027,7 @@ class SupervisedContrastiveLoss(keras.losses.Loss):
             ),
             self.temperature,)
         return tfa.losses.npairs_loss(tf.squeeze(labels), logits)
-class Distiller(keras.Model):
+class Distiller(tf.keras.Model):
     def __init__(self, student, teacher):
         super(Distiller, self).__init__()
         self.teacher = teacher
@@ -1189,7 +1189,7 @@ class TransformerBlock(layers.Layer):
         self.ff_dim = ff_dim
         self.num_heads=num_heads
         self.att = MultiHeadSelfAttention(embed_dim, num_heads)
-        self.ffn = keras.Sequential(
+        self.ffn = tf.keras.Sequential(
             [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim),]
         )
         self.layernorm1 = layers.LayerNormalization(epsilon=1e-6)
