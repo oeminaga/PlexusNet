@@ -4,7 +4,7 @@ Copyright by Okyaz Eminaga. 2020
 import math, os, re, warnings, random, time
 from tensorflow.keras import layers, models,optimizers
 from tensorflow.keras.layers import LeakyReLU
-import keras.backend as K
+import tensorflow.keras.backend as K
 from tensorflow.keras.constraints import min_max_norm
 from tensorflow.keras import regularizers, initializers
 from tensorflow.keras.regularizers import l2
@@ -391,7 +391,6 @@ class PlexusNet():
             x_y = layers.LeakyReLU()(x_y)
             return x_y
         if type_of_block=="bayesian_inception":
-            #x= tf.cast(x, tf.float16)
             x_v_0=tfp.layers.Convolution2DFlipout(
             initial_filter, kernel_size=1,strides=1, padding='SAME',
             kernel_divergence_fn=self.kl_divergence_function,
