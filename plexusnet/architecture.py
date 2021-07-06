@@ -13,7 +13,12 @@ import os
 from . import utils
 from tensorflow.keras.models import load_model
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers.experimental import RandomFourierFeatures
+Ignore_experimental = False
+try:
+    from tensorflow.keras.layers.experimental import RandomFourierFeatures
+except:
+    print("tensorflow.keras.layers.experimental not available. Ignoring")
+    Ignore_experimental=True
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D,GlobalAveragePooling2D,Activation, Dropout, Dense, GlobalMaxPooling2D
 from .functions import *
 import tensorflow as tf
@@ -21,7 +26,10 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow_addons as tfa
 import numpy as np
-import tensorflow_probability as tfp
+try:
+    import tensorflow_probability as tfp
+except:
+    print("tensorflow_probability ignored")
 
 # Mixed precision
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
@@ -225,7 +233,11 @@ def data_augment(image, label):
     return image, label
 
 def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="categorical_crossentropy"):
-    custom_objects_internal = {'JunctionWeightLayer':utils.JunctionWeightLayer, 'RotationThetaWeightLayer': utils.RotationThetaWeightLayer, "Last_Sigmoid":Last_Sigmoid, "Mil_Attention":Mil_Attention, "RandomFourierFeatures": RandomFourierFeatures, "UnitNormLayer":UnitNormLayer, "MultiHeadSelfAttention":MultiHeadSelfAttention, "TransformerBlock":TransformerBlock}
+    if not Ignore_experimental:
+        custom_objects_internal = {'JunctionWeightLayer':utils.JunctionWeightLayer, 'RotationThetaWeightLayer': utils.RotationThetaWeightLayer, "Last_Sigmoid":Last_Sigmoid, "Mil_Attention":Mil_Attention, "RandomFourierFeatures": RandomFourierFeatures, "UnitNormLayer":UnitNormLayer, "MultiHeadSelfAttention":MultiHeadSelfAttention, "TransformerBlock":TransformerBlock}
+    else:
+        custom_objects_internal = {'JunctionWeightLayer':utils.JunctionWeightLayer, 'RotationThetaWeightLayer': utils.RotationThetaWeightLayer, "Last_Sigmoid":Last_Sigmoid, "Mil_Attention":Mil_Attention, "RandomFourierFeatures": None, "UnitNormLayer":UnitNormLayer, "MultiHeadSelfAttention":MultiHeadSelfAttention, "TransformerBlock":TransformerBlock}
+        
     for  key in custom_objects:
         custom_objects_internal[key]=custom_objects[key]
 
@@ -235,12 +247,14 @@ def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="ca
 Configuration={}
 Configuration["num_heads"]=4
 Configuration["number_of_transformer_blocks"]=1
-
-data_augmentation = tf.keras.Sequential([
-            layers.experimental.preprocessing.RandomFlip("horizontal"),
-            layers.experimental.preprocessing.RandomRotation(0.02),
-            layers.experimental.preprocessing.RandomWidth(0.2),
-            layers.experimental.preprocessing.RandomHeight(0.2),])
+try:
+    data_augmentation = tf.keras.Sequential([
+                layers.experimental.preprocessing.RandomFlip("horizontal"),
+                layers.experimental.preprocessing.RandomRotation(0.02),
+                layers.experimental.preprocessing.RandomWidth(0.2),
+                layers.experimental.preprocessing.RandomHeight(0.2),])
+except:
+    print("ignore preprocessing functions...")
             
 
 def network_autoregressive(x):
@@ -249,7 +263,7 @@ def network_autoregressive(x):
     x = tf.keras.layers.GRU(units=256, return_sequences=False)(x)
     return x
 class PlexusNet():
-    def __init__(self, input_shape=(512,512), number_inputs=1,initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max", RunLayerNormalizationInSCL=True, ApplyTransformer=False, number_of_transformer_blocks=1, propogate_img=False,apply_augmentation=False, lanewise_augmentation=False, ApplyLayerNormalization=False, ApplyLaneForAugmentation=[0],kl_divergence_function=None):
+    def __init__(self, input_shape=(512,512), number_inputs=1,initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max", RunLayerNormalizationInSCL=True, ApplyTransformer=False, number_of_transformer_blocks=1, propogate_img=False,apply_augmentation=False, lanewise_augmentation=False, ApplyLayerNormalization=False, ApplyLaneForAugmentation=[0],run_255_division=True,kl_divergence_function=None):
         """
         Architecture hyperparameter are:
         initial_filter (Default: 2)
@@ -302,6 +316,7 @@ class PlexusNet():
         self.apply_RandomFourierFeatures = apply_RandomFourierFeatures
         self.number_inputs=number_inputs
         self.ApplyTransformer = ApplyTransformer
+        self.run_255_division = run_255_division
         shape_default  = (self.input_shape[0], self.input_shape[1], self.number_input_channel)
         if number_inputs ==1:
             x = layers.Input(shape=shape_default)
@@ -339,7 +354,8 @@ class PlexusNet():
             x_b = layers.experimental.preprocessing.RandomZoom (0.1)(x_x)
             x_c = x_x
             x_x = layers.Concatenate()([x_a,x_b,x_c])
-        x_y_o = layers.Lambda(lambda x: x*(1/255))(x_x)
+        if run_255_division:
+            x_y_o = layers.Lambda(lambda x: x*(1/255))(x_x)
         if run_normalization:
             x_y_o = utils.RotationThetaWeightLayer()([x_y_o,x_y_o])
             #rescale
