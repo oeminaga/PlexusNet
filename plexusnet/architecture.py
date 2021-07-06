@@ -356,6 +356,8 @@ class PlexusNet():
             x_x = layers.Concatenate()([x_a,x_b,x_c])
         if run_255_division:
             x_y_o = layers.Lambda(lambda x: x*(1/255))(x_x)
+        else:
+            x_y_o = x_x
         if run_normalization:
             x_y_o = utils.RotationThetaWeightLayer()([x_y_o,x_y_o])
             #rescale
