@@ -263,7 +263,7 @@ def network_autoregressive(x):
     x = tf.keras.layers.GRU(units=256, return_sequences=False)(x)
     return x
 class PlexusNet():
-    def __init__(self, input_shape=(512,512), number_inputs=1,initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max", RunLayerNormalizationInSCL=True, ApplyTransformer=False, number_of_transformer_blocks=1, propogate_img=False,apply_augmentation=False, lanewise_augmentation=False, ApplyLayerNormalization=False, ApplyLaneForAugmentation=[0],run_255_division=True,kl_divergence_function=None):
+    def __init__(self, input_shape=(512,512), number_inputs=1,initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max", RunLayerNormalizationInSCL=True, ApplyTransformer=False, number_of_transformer_blocks=1, propogate_img=False,apply_augmentation=False, lanewise_augmentation=False, ApplyLayerNormalization=False, ApplyLaneForAugmentation=[0],run_255_division=True,kernel_regularizer=l2(0.000001),kl_divergence_function=None):
         """
         Architecture hyperparameter are:
         initial_filter (Default: 2)
@@ -317,6 +317,7 @@ class PlexusNet():
         self.number_inputs=number_inputs
         self.ApplyTransformer = ApplyTransformer
         self.run_255_division = run_255_division
+        self.kernel_regularizer = kernel_regularizer
         shape_default  = (self.input_shape[0], self.input_shape[1], self.number_input_channel)
         if number_inputs ==1:
             x = layers.Input(shape=shape_default)
@@ -367,7 +368,7 @@ class PlexusNet():
             x_y_o = layers.Cropping2D(cropping=crop_boundary)(x_y_o)
         #Generate multiple channels from the image
         x_y = Conv2DBNSLU(x_y_o, filters= filter_num_for_first_convlayer, kernel_size=kernel_size_for_first_convlayer, strides=stride_for_first_convlayer, activation=activation_for_first_convlayer, padding='same')
-        y = self.Core(x_y, initial_filter = self.initial_filter, length=self.length, depth=self.depth, number_of_junctions=self.junction, compression=self.compression_rate, type_of_block=self.type_of_block)
+        y = self.Core(x_y, initial_filter = self.initial_filter, kernel_regularizer=self.kernel_regularizer, length=self.length, depth=self.depth, number_of_junctions=self.junction, compression=self.compression_rate, type_of_block=self.type_of_block)
         if self.SCL:
             self.model = models.Model(inputs=x, outputs=y)
             self.projector_z = projector_net()
@@ -394,7 +395,7 @@ class PlexusNet():
         type_of_block selection: inception,resnet,vgg,vgg_short
         """
         if self.MIL_mode:
-            kernel_regularizer=l2(0.000001)
+            #kernel_regularizer=self.kernel_regularizer #(0.000001)
             x = layers.LayerNormalization(scale=True, center=True)(x)
             x_y = layers.Conv2D(int(round(initial_filter*1.5)), (1,16),kernel_initializer=initializers.glorot_normal(seed=seed+8),kernel_regularizer=kernel_regularizer, padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001))(x)
             x_y_u = layers.Conv2D(int(round(initial_filter*1.5)), (1,16), kernel_initializer=initializers.glorot_normal(seed=seed+5),kernel_regularizer=kernel_regularizer, padding='same',kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(1,8))(x)
@@ -485,7 +486,7 @@ class PlexusNet():
                 x_y = layers.BatchNormalization(scale=False)(x_y)
             x_y = layers.Activation("relu")(x_y)
         if type_of_block=="soft_att":
-            kernel_regularizer=l2(0.000001)
+            #kernel_regularizer=l2(0.000001)
             x = layers.LayerNormalization(scale=True, center=True)(x)
             if x.shape.as_list()[2]<14:
                 x_y = layers.Conv2D(int(round(initial_filter*1.5)), (3,3),kernel_initializer=initializers.glorot_normal(seed=seed+8),kernel_regularizer=kernel_regularizer, padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001))(x)
@@ -506,7 +507,7 @@ class PlexusNet():
             x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (3,3), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8),kernel_constraint=min_max_norm(-1,1,rate=0.001))(x_y)
             x_y = layers.LeakyReLU()(x_y)
         if type_of_block=="soft_att_all":
-            kernel_regularizer=l2(0.000001)
+            #kernel_regularizer=l2(0.000001)
             x = layers.LayerNormalization(scale=True, center=True)(x)
             x_y = layers.Conv2D(int(round(initial_filter*1.5)), (3,3),kernel_initializer=initializers.glorot_normal(seed=seed+8),kernel_regularizer=kernel_regularizer, padding='same', kernel_constraint=min_max_norm(-1,1,rate=0.001))(x)
             x_y_u = layers.Conv2D(int(round(initial_filter*1.5)), (3,3), kernel_initializer=initializers.glorot_normal(seed=seed+5),kernel_regularizer=kernel_regularizer, padding='same',kernel_constraint=min_max_norm(-1,1,rate=0.001), dilation_rate=(3,3))(x)
