@@ -33,7 +33,7 @@ except:
 
 # Mixed precision
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
-def seed_everything(seed=0):
+def seed_everything(seed=123):
     random.seed(seed)
     np.random.seed(seed)
     tf.random.set_seed(seed)
@@ -41,7 +41,8 @@ def seed_everything(seed=0):
     os.environ['TF_DETERMINISTIC_OPS'] = '1'
 
 seed = 123
-seed_everything(seed)
+
+#seed_everything(seed)
 warnings.filterwarnings('ignore')
 
 HEIGHT = 512
