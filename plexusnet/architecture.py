@@ -674,6 +674,7 @@ class PlexusNet():
                 layer._name = f"C_{i}_{layer.name}"
 
             nodes.append(vb)
+            print(nodes)
 
         #Generate Connection between Nodes
         #Generate the junctions between nodes
