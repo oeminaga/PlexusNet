@@ -667,7 +667,7 @@ class PlexusNet():
                 if i in self.ApplyLaneForAugmentation:
                     x = self.data_augmentation(x)
             if self.patch_layer>1:
-                vb = self.Spider_Node(x[i], initial_filter, compression,depth, kernel_regularizer, counter=i, type_of_block=type_of_block, initial_image=initial_image)
+                vb = self.Spider_Node(x[:,i,:,:,:], initial_filter, compression,depth, kernel_regularizer, counter=i, type_of_block=type_of_block, initial_image=initial_image)
             else:
                 vb = self.Spider_Node(x, initial_filter, compression,depth, kernel_regularizer, counter=i, type_of_block=type_of_block, initial_image=initial_image)
             for j, layer in enumerate(vb):
