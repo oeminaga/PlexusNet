@@ -271,8 +271,8 @@ class Patches(layers.Layer):
         batch_size = tf.shape(images)[0]
         patches = tf.image.extract_patches(
             images=images,
-            sizes=[1, self.patch_size, self.patch_size, 1],
-            strides=[1, self.patch_size, self.patch_size, 1],
+            sizes=[1, self.patch_size, self.patch_size, 3],
+            strides=[1, self.patch_size, self.patch_size, 3],
             rates=[1, 1, 1, 1],
             padding="VALID",
         )
