@@ -345,8 +345,6 @@ class PlexusNet():
             x = []
             for k in range(number_inputs):
                 x.append(layers.Input(shape=shape_default))
-        if self.patch_layer>1:
-            x = Patches(self.input_shape[1]//self.patch_layer)(x)
         if self.lanewise_augmentation:
             '''
             self.data_augmentation = []
@@ -371,6 +369,10 @@ class PlexusNet():
         else:
             x_x=x
         
+        if self.patch_layer>1:
+            x_x = Patches(self.input_shape[1]//self.patch_layer)(x_x)
+        
+
         if propogate_img:
             x_a = layers.experimental.preprocessing.RandomRotation(0.1)(x_x)
             x_b = layers.experimental.preprocessing.RandomZoom (0.1)(x_x)
