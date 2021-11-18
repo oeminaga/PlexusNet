@@ -673,8 +673,8 @@ class PlexusNet():
             for j, layer in enumerate(vb):
                 layer._name = f"C_{i}_{layer.name}"
 
-            self.nodes.append(vb)
-            print(nodes)
+            nodes.append(vb)
+        print(nodes)
 
         #Generate Connection between Nodes
         #Generate the junctions between nodes
