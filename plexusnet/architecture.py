@@ -346,7 +346,7 @@ class PlexusNet():
             for k in range(number_inputs):
                 x.append(layers.Input(shape=shape_default))
         if self.patch_layer>1:
-            x = Patches(self.patch_layer)(x)
+            x = Patches(self.input_shape[1]//self.patch_layer)(x)
         if self.lanewise_augmentation:
             '''
             self.data_augmentation = []
