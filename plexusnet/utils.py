@@ -57,6 +57,7 @@ class RotationThetaWeightLayerCustomWeight(Layer): # a scaled layer
         config.update({
             "W1": self.W1,
             "W2": self.W2,
+            "name": self.name
         })
         return config
 
