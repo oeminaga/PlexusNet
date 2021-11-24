@@ -287,7 +287,7 @@ class Patches(layers.Layer):
         })
         return config
 class PlexusNet():
-    def __init__(self, input_shape=(512,512), number_inputs=1,initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max", RunLayerNormalizationInSCL=True, ApplyTransformer=False, number_of_transformer_blocks=1, propogate_img=False,apply_augmentation=False, lanewise_augmentation=False, ApplyLayerNormalization=False, ApplyLaneForAugmentation=[0],run_255_division=True,kernel_regularizer=l2(0.000001),escape_fc1=False,fc1_activation="selu",kl_divergence_function=None, patch_layer=0):
+    def __init__(self, input_shape=(512,512), number_inputs=1,initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max", RunLayerNormalizationInSCL=True, ApplyTransformer=False, number_of_transformer_blocks=1, propogate_img=False,apply_augmentation=False, lanewise_augmentation=False, ApplyLayerNormalization=False, ApplyLaneForAugmentation=[0],run_255_division=True,kernel_regularizer=l2(0.000001),escape_fc1=False,fc1_activation="selu",kl_divergence_function=None, patch_layer=0, apply_custom_weights_for_transformation_layer=False,custom_weight_for_transformationl_layer = {"w1":-9, "w2":-9}):
         """
         Architecture hyperparameter are:
         initial_filter (Default: 2)
@@ -386,8 +386,12 @@ class PlexusNet():
             x_y_o = layers.Lambda(lambda x: x*(1/255))(x_x)
         else:
             x_y_o = x_x
-        if run_normalization:
+        if run_normalization and apply_custom_weights_for_transformation_layer==False:
             x_y_o = utils.RotationThetaWeightLayer()([x_y_o,x_y_o])
+        elif run_normalization and apply_custom_weights_for_transformation_layer:
+            w1=custom_weight_for_transformationl_layer["w1"]
+            w2=custom_weight_for_transformationl_layer["w2"]
+            x_y_o = utils.RotationThetaWeightLayerCustomWeight(w1,w2)([x_y_o,x_y_o])
             #rescale
         
 
