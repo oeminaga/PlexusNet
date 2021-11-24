@@ -38,14 +38,10 @@ class RotationThetaWeightLayer(Layer): # a scaled layer
         return K.cos(self.W1*90) * (-2) * K.exp(-(a**2+b**2)) + K.sin(self.W2*90) * (-2) * b * K.exp(-(a**2+b**2))
 class RotationThetaWeightLayerCustomWeight(Layer): # a scaled layer
     def __init__(self, w1=0.09,w2=0.03, **kwargs):
-        self.W1=w1
-        self.W2=w2
+        self.W1=K.constant(w1, dtype=K.floatx())
+        self.W2=K.constant(w2, dtype=K.floatx())
         super(RotationThetaWeightLayerCustomWeight, self).__init__(**kwargs)
-    """
-    def build(self, input_shape):
-        assert isinstance(input_shape, list)
-        super(RotationThetaWeightLayerCustomWeight, self).build(input_shape)
-    """
+
     def call(self, x):
         assert isinstance(x, list)
         a, b = x
