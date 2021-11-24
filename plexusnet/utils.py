@@ -52,6 +52,14 @@ class RotationThetaWeightLayerCustomWeight(Layer): # a scaled layer
 
         return K.cos(self.W1*90) * (-2) * K.exp(-(a**2+b**2)) + K.sin(self.W2*90) * (-2) * b * K.exp(-(a**2+b**2))
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "W1": self.W1,
+            "W2": self.W2,
+        })
+        return config
+
 class JunctionWeightLayer(Layer): # a junction layer
     def __init__(self,  **kwargs):
         self.func_junction = layers.add
