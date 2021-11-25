@@ -40,8 +40,8 @@ import tensorflow as tf
 class RotationThetaWeightLayerCustomWeight(Layer): # a scaled layer
     def __init__(self, w1=0.09,w2=0.03, **kwargs):
         super(RotationThetaWeightLayerCustomWeight, self).__init__(**kwargs)
-        self.W1=K.variable(w1)#tf.Variable(initial_value=w1, trainable=False)
-        self.W2=K.variable(w2)#tf.Variable(initial_value=w2, trainable=False)
+        self.W1=K.variable(w1,dtype='float64', name="W1_CustomWeight")#tf.Variable(initial_value=w1, trainable=False)
+        self.W2=K.variable(w2,dtype='float64', name="W2_CustomWeight")#tf.Variable(initial_value=w2, trainable=False)
 
     def call(self, x):
         assert isinstance(x, list)
