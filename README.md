@@ -6,7 +6,9 @@ PlexusNet for medical imaging.
 @To Install: pip3 install git+https://github.com/oeminaga/PlexusNet.git <br />
 @Please install tensorflow, tensorflow_addons and tensorflow_probability before using this package. <br />
 
-For reproducibility, please add the function seed_everything()
+For reproducibility, please add the function 
+import plexusnet<br />
+seed_everything()<br />
 
 #An example code to use the package: 
 
