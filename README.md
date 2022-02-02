@@ -4,7 +4,9 @@ PlexusNet for medical imaging.
 @This package was built on the Keras framework and easily allows using the PlexusNet architecture for research projects.
 
 @To Install: pip3 install git+https://github.com/oeminaga/PlexusNet.git <br />
-@Please install tensorflow before using this package. <br />
+@Please install tensorflow, tensorflow_addons and tensorflow_probability before using this package. <br />
+
+For reproducibility, please add the function seed_everything()
 
 #An example code to use the package: 
 
