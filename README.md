@@ -24,6 +24,7 @@ from plexusnet.architecture import LoadModel<br />
 model=LoadModel("your_model.h5")<br />
 model.predict(X)<br />
 
-Please when you use this package.
+Please cite, when you use this package:
+{cite}
 __________
 Please be aware that the architecture and the formula for color intensity normalization are only provided for review and academic research purposes. The use for other purposes not listed here is not allowed without the permission of the author. Replication, modification or reuse of the software or the template are not allowed without the permission of the author.
