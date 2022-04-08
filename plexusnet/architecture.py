@@ -1211,7 +1211,7 @@ class MultiHeadSelfAttention(layers.Layer):
         x = tf.reshape(x, (batch_size, -1, self.num_heads, self.projection_dim))
         return tf.transpose(x, perm=[0, 2, 1, 3])
 
-    def call(self, inputs):
+    def call(self, inputs, training):
         # x.shape = [batch_size, seq_len, embedding_dim]
         batch_size = tf.shape(inputs)[0]
         query = self.query_dense(inputs)  # (batch_size, seq_len, embed_dim)
