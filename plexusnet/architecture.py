@@ -768,9 +768,9 @@ class PlexusNet():
         if self.ApplyTransformer:
             dense_shape = y.shape.as_list()
             num_heads = Configuration["num_heads"]
-	    residual_a = dense_shape[-1] % num_heads
-	    if residual_a != 0:
-		Configuration["num_heads"] = num_heads = residual_a
+            residual_a = dense_shape[-1] % num_heads
+            if residual_a != 0:
+                Configuration["num_heads"] = num_heads = residual_a
             y=layers.Reshape((dense_shape[1]*dense_shape[2],dense_shape[-1]))(y)
             embed_dim=y.shape.as_list()[-1]
             ff_dim = y.shape.as_list()[-1]
