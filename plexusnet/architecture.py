@@ -771,7 +771,7 @@ class PlexusNet():
             residual_a = int(dense_shape[-1]) % int(num_heads)
             if residual_a != 0: #Check
                 Configuration["num_heads"] = num_heads = residual_a
-            y=layers.Reshape((dense_shape[1]*dense_shape[2],dense_shape[-1]))(y)
+            y=layers.Reshape((dense_shape[1]*dense_shape[2],dense_shape[-1]))(y) #y
             embed_dim=y.shape.as_list()[-1]
             ff_dim = y.shape.as_list()[-1]
             transformer_blocks = []
