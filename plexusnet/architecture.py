@@ -738,13 +738,13 @@ class PlexusNet():
     def Core(self, x, initial_filter=32, compression=0.5, length=5, depth=7, center_node_id=0, kernel_regularizer=None,random_junctions=True, number_of_junctions=5, junction_only_the_last_layers=False, type_of_block="inception", initial_image=None):
         nodes = []
         #Generate nodes
-        if self.patch_layer>1:
-            length=self.patch_layer**2
+        #if self.patch_size>1:
+        #    length=self.patch_layer**2
         for i in range(length):
             if self.lanewise_augmentation:
                 if i in self.ApplyLaneForAugmentation:
                     x = self.data_augmentation(x)
-            if self.patch_layer>1:
+            if self.patch_size>0:
                 vb = self.Spider_Node(x[:,i,:,:,:], initial_filter, compression,depth, kernel_regularizer, counter=i, type_of_block=type_of_block, initial_image=initial_image)
             else:
                 vb = self.Spider_Node(x, initial_filter, compression,depth, kernel_regularizer, counter=i, type_of_block=type_of_block, initial_image=initial_image)
