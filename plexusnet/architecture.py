@@ -451,7 +451,9 @@ class PlexusNet():
         if run_rescale:
             x_y_o = layers.Lambda(lambda x: (2* (x - K.min(x)/(K.max(x)-K.min(x)))-1))(x_y_o)
         if self.patch_size>1:
-            x_y_o = Patches(self.input_shape[1]//self.length)(x_y_o)
+            patch_size_x=self.input_shape[1]//self.length
+            patch_size_y=self.input_shape[0]//self.length
+            x_y_o = Patches((patch_size_x,patch_size_y))(x_y_o)
         if add_crop_layer:
             x_y_o = layers.Cropping2D(cropping=crop_boundary)(x_y_o)
         print(x_y_o.get_shape())
