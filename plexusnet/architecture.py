@@ -285,6 +285,7 @@ class Patches(layers.Layer):
             rates=(1, 1, 1, 1),
             padding="VALID",
         )
+        print("patches.get_shape()",patches.get_shape())
         patch_dim = patches.shape[-1]
         #patch_num = patches.shape[1]
         #return tf.reshape(patches, (batch_size, patch_num, patch_dim))
