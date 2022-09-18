@@ -511,7 +511,7 @@ class PlexusNet():
                     drop_path_rate=0.0,
                     layer_scale_init_value=1e-6)(x_y)
                 
-            x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (1,1), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8),kernel_constraint=min_max_norm(-1,1,rate=0.001))(x_y)
+            #x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (1,1), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8),kernel_constraint=min_max_norm(-1,1,rate=0.001))(x_y)
             return x_y
         if type_of_block=="bayesian_inception":
             x_v_0=tfp.layers.Convolution2DFlipout(
