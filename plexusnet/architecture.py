@@ -286,8 +286,9 @@ class Patches(layers.Layer):
             padding="VALID",
         )
         patch_dim = patches.shape[-1]
-        patch_num = patches.shape[1]
-        return tf.reshape(patches, (batch_size, patch_num * patch_num, patch_dim))
+        #patch_num = patches.shape[1]
+        #return tf.reshape(patches, (batch_size, patch_num, patch_dim))
+        return tf.reshape(patches, [batch_size,-1,patch_dim,self.patch_dim, 3])
     def get_config(self):
         config = super().get_config()
         config.update({
