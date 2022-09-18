@@ -497,8 +497,9 @@ class PlexusNet():
             x_y = layers.Multiply()([x_y_v, x_y])
             x_y = layers.Add()([x_y_t,x_y])
             shape_c = x_y.shape.as_list()[-1]
-            x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (1,16), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8),kernel_constraint=min_max_norm(-1,1,rate=0.001))(x_y)
-            x_y = layers.LeakyReLU()(x_y)
+            if reduction_channel_ratio<1.0:
+                x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (1,16), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8),kernel_constraint=min_max_norm(-1,1,rate=0.001))(x_y)
+                x_y = layers.LeakyReLU()(x_y)
             return x_y
         if type_of_block=="convnext":
             x_y=x
@@ -510,8 +511,9 @@ class PlexusNet():
                     projection_dim=shape_c,
                     drop_path_rate=0.0,
                     layer_scale_init_value=1e-6)(x_y)
-            shape_c = x_y.get_shape().as_list()[-1] 
-            x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (1,1), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8),kernel_constraint=min_max_norm(-1,1,rate=0.001))(x_y)
+            if reduction_channel_ratio<1.0:
+                shape_c = x_y.get_shape().as_list()[-1] 
+                x_y = layers.Conv2D(int(round(reduction_channel_ratio*float(shape_c))), (1,1), strides=(1,1), padding='same', kernel_initializer=initializers.he_normal(seed=seed+8),kernel_constraint=min_max_norm(-1,1,rate=0.001), activations="linear")(x_y)
             return x_y
         if type_of_block=="bayesian_inception":
             x_v_0=tfp.layers.Convolution2DFlipout(
