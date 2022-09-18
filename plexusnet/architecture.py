@@ -502,7 +502,7 @@ class PlexusNet():
             return x_y
         if type_of_block=="convnext":
             x_y=x
-            shape_c = x_y.shape.as_list()[-1]
+            shape_c = x_y.get_shape().as_list()[-1]
             for i in range(3):
                 
                 x_y = utils.ConvNeXtBlock(
