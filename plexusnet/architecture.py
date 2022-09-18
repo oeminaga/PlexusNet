@@ -285,10 +285,6 @@ class Patches(layers.Layer):
             rates=(1, 1, 1, 1),
             padding="VALID",
         )
-        print("patches.get_shape()",patches.get_shape())
-        #patch_dim = patches.shape[-1]
-        #patch_num = patches.shape[1]
-        #return tf.reshape(patches, (batch_size, patch_num, patch_dim))
         return tf.reshape(patches, [batch_size,-1,self.patch_size_x,self.patch_size_x, 3])
     def get_config(self):
         config = super().get_config()
@@ -458,7 +454,6 @@ class PlexusNet():
             x_y_o = Patches((patch_size_x,patch_size_y))(x_y_o)
         if add_crop_layer:
             x_y_o = layers.Cropping2D(cropping=crop_boundary)(x_y_o)
-        print(x_y_o.get_shape())
         #Generate multiple channels from the image
         if self.patch_size>1:
             y = self.Core(x_y_o, initial_filter = self.initial_filter, kernel_regularizer=self.kernel_regularizer, length=self.length, depth=self.depth, number_of_junctions=self.junction, compression=self.compression_rate, type_of_block=self.type_of_block)
