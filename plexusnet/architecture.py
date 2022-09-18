@@ -289,7 +289,7 @@ class Patches(layers.Layer):
         patch_dim = patches.shape[-1]
         #patch_num = patches.shape[1]
         #return tf.reshape(patches, (batch_size, patch_num, patch_dim))
-        return tf.reshape(patches, [batch_size,-1,patch_dim,patch_dim, 3])
+        return tf.reshape(patches, [batch_size,-1,patch_size_x,patch_size_x, 3])
     def get_config(self):
         config = super().get_config()
         config.update({
@@ -453,9 +453,8 @@ class PlexusNet():
         if run_rescale:
             x_y_o = layers.Lambda(lambda x: (2* (x - K.min(x)/(K.max(x)-K.min(x)))-1))(x_y_o)
         if self.patch_size>1:
-            patch_size_x=self.input_shape[1]//self.length
-            print("patch_size_x",patch_size_x)
-            patch_size_y=self.input_shape[0]//self.length
+            patch_size_x=self.input_shape[0]//self.length
+            patch_size_y=self.input_shape[1]//self.length
             x_y_o = Patches((patch_size_x,patch_size_y))(x_y_o)
         if add_crop_layer:
             x_y_o = layers.Cropping2D(cropping=crop_boundary)(x_y_o)
