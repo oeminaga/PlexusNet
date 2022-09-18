@@ -505,7 +505,7 @@ class PlexusNet():
             shape_c = x_y.get_shape().as_list()[-1]
             if shape_c==0:
                 shape_c=3
-                x_y = utils.ConvNeXtBlock(
+            x_y = utils.ConvNeXtBlock(
                     projection_dim=shape_c,
                     drop_path_rate=0.0,
                     layer_scale_init_value=1e-6)(x_y)
