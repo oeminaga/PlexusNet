@@ -502,6 +502,7 @@ class PlexusNet():
             return x_y
         if type_of_block=="convnext":
             x_y=x
+            print("x_y",x_y.get_shape())
             shape_c = x_y.get_shape().as_list()[-1]
             if shape_c==0:
                 shape_c=3
