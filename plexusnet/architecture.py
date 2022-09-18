@@ -815,7 +815,7 @@ class PlexusNet():
                         junction_levels = iteration_data[iteration_data[:,0]==i][:,1].tolist()
                     else:
                         junction_levels = None
-                    if self.patch_layer>1:
+                    if self.patch_size>0:
                         second_nodes.append(self.Spider_Node_w_Junction_list(x[:,i,:,:,:], nodes[i], initial_filter, compression, depth, junction_levels,kernel_regularizer, counter=i, type_of_block=type_of_block, initial_image=initial_image))
                     else:
                         second_nodes.append(self.Spider_Node_w_Junction_list(x, nodes[i], initial_filter, compression, depth, junction_levels,kernel_regularizer, counter=i, type_of_block=type_of_block, initial_image=initial_image))
