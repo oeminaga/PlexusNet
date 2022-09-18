@@ -1,6 +1,7 @@
 """
 Copyright by Okyaz Eminaga. 2020
 """
+import tensorflow as tf
 from tensorflow.keras.layers import Layer
 from tensorflow.keras.constraints import min_max_norm
 from tensorflow.keras import layers
@@ -11,6 +12,125 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import pandas as pd
+class StochasticDepth(layers.Layer):
+    """Stochastic Depth module.
+    It performs batch-wise dropping rather than sample-wise. In libraries like
+    `timm`, it's similar to `DropPath` layers that drops residual paths
+    sample-wise.
+    References:
+      - https://github.com/rwightman/pytorch-image-models
+    Args:
+      drop_path_rate (float): Probability of dropping paths. Should be within
+        [0, 1].
+    Returns:
+      Tensor either with the residual path dropped or kept.
+    """
+
+    def __init__(self, drop_path_rate, **kwargs):
+        super().__init__(**kwargs)
+        self.drop_path_rate = drop_path_rate
+
+    def call(self, x, training=None):
+        if training:
+            keep_prob = 1 - self.drop_path_rate
+            shape = (tf.shape(x)[0],) + (1,) * (len(tf.shape(x)) - 1)
+            random_tensor = keep_prob + tf.random.uniform(shape, 0, 1)
+            random_tensor = tf.floor(random_tensor)
+            return (x / keep_prob) * random_tensor
+        return x
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"drop_path_rate": self.drop_path_rate})
+        return config
+
+class LayerScale(layers.Layer):
+    """Layer scale module.
+    References:
+      - https://arxiv.org/abs/2103.17239
+    Args:
+      init_values (float): Initial value for layer scale. Should be within
+        [0, 1].
+      projection_dim (int): Projection dimensionality.
+    Returns:
+      Tensor multiplied to the scale.
+    """
+
+    def __init__(self, init_values, projection_dim, **kwargs):
+        super().__init__(**kwargs)
+        self.init_values = init_values
+        self.projection_dim = projection_dim
+
+    def build(self, input_shape):
+        self.gamma = tf.Variable(
+            self.init_values * tf.ones((self.projection_dim,))
+        )
+
+    def call(self, x):
+        return x * self.gamma
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "init_values": self.init_values,
+                "projection_dim": self.projection_dim,
+            }
+        )
+        return config
+
+
+def ConvNeXtBlock(
+    projection_dim, drop_path_rate=0.0, layer_scale_init_value=1e-6, name=None
+):
+    """ConvNeXt block.
+    References:
+    - https://arxiv.org/abs/2201.03545
+    - https://github.com/facebookresearch/ConvNeXt/blob/main/models/convnext.py
+    Notes:
+      In the original ConvNeXt implementation (linked above), the authors use
+      `Dense` layers for pointwise convolutions for increased efficiency.
+      Following that, this implementation also uses the same.
+    Args:
+      projection_dim (int): Number of filters for convolution layers. In the
+        ConvNeXt paper, this is referred to as projection dimension.
+      drop_path_rate (float): Probability of dropping paths. Should be within
+        [0, 1].
+      layer_scale_init_value (float): Layer scale value. Should be a small float
+        number.
+      name: name to path to the keras layer.
+    Returns:
+      A function representing a ConvNeXtBlock block.
+    """
+    def apply(inputs):
+        x = inputs
+
+        x = layers.Conv2D(
+            filters=projection_dim,
+            kernel_size=7,
+            padding="same",
+            groups=projection_dim,
+        )(x)
+        x = layers.LayerNormalization(epsilon=1e-6)(x)
+        x = layers.Dense(4 * projection_dim)(x)
+        x = layers.Activation("gelu")(x)
+        x = layers.Dense(projection_dim)(x)
+
+        if layer_scale_init_value is not None:
+            x = LayerScale(
+                layer_scale_init_value,
+                projection_dim,
+            )(x)
+        if drop_path_rate:
+            layer = StochasticDepth(
+                drop_path_rate
+            )
+        else:
+            layer = layers.Activation("linear")
+
+        return inputs + layer(x)
+
+    return apply
 class RotationThetaWeightLayer(Layer): # a scaled layer
     def __init__(self, **kwargs):
         super(RotationThetaWeightLayer, self).__init__(**kwargs)
@@ -36,7 +156,7 @@ class RotationThetaWeightLayer(Layer): # a scaled layer
         a, b = x
 
         return K.cos(self.W1*90) * (-2) * K.exp(-(a**2+b**2)) + K.sin(self.W2*90) * (-2) * b * K.exp(-(a**2+b**2))
-import tensorflow as tf
+
 class RotationThetaWeightLayerCustomWeight(Layer): # a scaled layer
     def __init__(self, w1=0.09,w2=0.03, **kwargs):
         super(RotationThetaWeightLayerCustomWeight, self).__init__(**kwargs)

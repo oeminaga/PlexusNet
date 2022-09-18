@@ -266,81 +266,31 @@ def network_autoregressive(x):
     ''' Define the network that integrates information along the sequence '''
     x = tf.keras.layers.GRU(units=256, return_sequences=False)(x)
     return x
-
-'''
-Implement patch embedding
-'''
 class Patches(layers.Layer):
-    def __init__(self, patch_size, divide_scene, **kwargs):
-        super(Patches, self).__init__(**kwargs)
-        self.patch_size_x = patch_size[0]
-        self.patch_size_y = patch_size[0]
+    def __init__(self, patch_size):
+        super(Patches, self).__init__()
+        self.patch_size = patch_size
 
     def call(self, images):
         batch_size = tf.shape(images)[0]
         patches = tf.image.extract_patches(
             images=images,
-            sizes=(1, self.patch_size_x, self.patch_size_y, 1),
-            strides=(1, self.patch_size_x, self.patch_size_y, 1),
-            rates=(1, 1, 1, 1),
+            sizes=[1, self.patch_size, self.patch_size,1],
+            strides=[1, self.patch_size, self.patch_size, 1],
+            rates=[1, 1, 1, 1],
             padding="VALID",
         )
-        patch_dim = patches.shape[-1]
-        patch_num = patches.shape[1]
-        return tf.reshape(patches, (batch_size, patch_num * patch_num, patch_dim))
+        patch_dims = patches.shape[-1]
+        patches = tf.reshape(patches, [batch_size,-1,self.patch_size,self.patch_size, 3])
+        return patches
     def get_config(self):
         config = super().get_config()
         config.update({
-            "patch_size_x": self.patch_size_x,
-            "patch_size_y": self.patch_size_y
+            "patch_size": self.patch_size
         })
         return config
-class PatchEmbedding(layers.Layer):
-    def __init__(self, num_patch, embed_dim, **kwargs):
-        super(PatchEmbedding, self).__init__(**kwargs)
-        self.num_patch = num_patch
-        self.embed_dim = embed_dim
-        self.proj = layers.Dense(embed_dim)
-        self.pos_embed = layers.Embedding(input_dim=num_patch, output_dim=embed_dim)
-
-    def call(self, patch):
-        pos = tf.range(start=0, limit=self.num_patch, delta=1)
-        return self.proj(patch) + self.pos_embed(pos)
-    def get_config(self):
-        config = super().get_config()
-        config.update({
-            "num_patch": self.num_patch,
-            "embed_dim": self.embed_dim,
-        })
-        return config
-
-class PatchMerging(tf.keras.layers.Layer):
-    def __init__(self, num_patch, embed_dim):
-        super(PatchMerging, self).__init__()
-        self.num_patch = num_patch
-        self.embed_dim = embed_dim
-        self.linear_trans = layers.Dense(2 * embed_dim, use_bias=False)
-
-    def call(self, x):
-        height, width = self.num_patch
-        _, _, C = x.get_shape().as_list()
-        x = tf.reshape(x, shape=(-1, height, width, C))
-        x0 = x[:, 0::2, 0::2, :]
-        x1 = x[:, 1::2, 0::2, :]
-        x2 = x[:, 0::2, 1::2, :]
-        x3 = x[:, 1::2, 1::2, :]
-        x = tf.concat((x0, x1, x2, x3), axis=-1)
-        x = tf.reshape(x, shape=(-1, (height // 2) * (width // 2), 4 * C))
-        return self.linear_trans(x)
-    def get_config(self):
-        config = super().get_config()
-        config.update({
-            "num_patch": self.num_patch,
-            "embed_dim": self.embed_dim
-        })
-        return config 
 class PlexusNet():
-    def __init__(self, input_shape=(512,512), number_inputs=1,initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max", RunLayerNormalizationInSCL=True, ApplyTransformer=False, number_of_transformer_blocks=1, propogate_img=False,apply_augmentation=False, lanewise_augmentation=False, ApplyLayerNormalization=False, ApplyLaneForAugmentation=[0],run_255_division=True,kernel_regularizer=l2(0.000001),escape_fc1=False,fc1_activation="selu",kl_divergence_function=None, patch_layer=None,patch_size=0, apply_custom_weights_for_transformation_layer=False,custom_weight_for_transformationl_layer = {"w1":-9, "w2":-9}):
+    def __init__(self, input_shape=(512,512), number_inputs=1,initial_filter=2, length=2, depth=7, junction=3, n_class=2, number_input_channel=3, compression_rate=0.5,final_activation="softmax", random_junctions=True, run_all_BN=True ,type_of_block="inception", run_normalization=True, run_rescale=True, filter_num_for_first_convlayer=32, kernel_size_for_first_convlayer=(5,5),stride_for_first_convlayer=2,activation_for_first_convlayer="relu", add_crop_layer=False, crop_boundary=((5,5),(5,5)), get_last_conv=False, normalize_by_factor=1.0/255.0, apply_RandomFourierFeatures=False,MIL_mode=False, MIL_CONV_mode=False, MIL_FC_percentage_of_feature=0.01, MIL_useGated=False,SCL=False,CPC=False, terms=4, predict_terms=4, code_size=256, GlobalPooling="max", RunLayerNormalizationInSCL=True, ApplyTransformer=False, number_of_transformer_blocks=1, propogate_img=False,apply_augmentation=False, lanewise_augmentation=False, ApplyLayerNormalization=False, ApplyLaneForAugmentation=[0],run_255_division=True,kernel_regularizer=l2(0.000001),escape_fc1=False,fc1_activation="selu",kl_divergence_function=None, patch_layer=0, apply_custom_weights_for_transformation_layer=False,custom_weight_for_transformationl_layer = {"w1":-9, "w2":-9}):
         """
         Architecture hyperparameter are:
         initial_filter (Default: 2)
@@ -397,7 +347,7 @@ class PlexusNet():
         self.kernel_regularizer = kernel_regularizer
         self.escape_fc1=escape_fc1
         self.fc1_activation=fc1_activation
-        self.patch_size =patch_size
+        self.patch_layer =patch_layer
         shape_default  = (self.input_shape[0], self.input_shape[1], self.number_input_channel)
         if number_inputs ==1:
             x = layers.Input(shape=shape_default)
@@ -450,13 +400,13 @@ class PlexusNet():
 
         if run_rescale:
             x_y_o = layers.Lambda(lambda x: (2* (x - K.min(x)/(K.max(x)-K.min(x)))-1))(x_y_o)
-        if self.patch_size>1:
-            x_y_o = Patches(self.input_shape[1]//self.length)(x_y_o)
+        if self.patch_layer>1:
+            x_y_o = Patches(self.input_shape[1]//self.patch_layer)(x_y_o)
         if add_crop_layer:
             x_y_o = layers.Cropping2D(cropping=crop_boundary)(x_y_o)
-        print(x_y_o.get_shape())
+
         #Generate multiple channels from the image
-        if self.patch_size>1:
+        if self.patch_layer>1:
             y = self.Core(x_y_o, initial_filter = self.initial_filter, kernel_regularizer=self.kernel_regularizer, length=self.length, depth=self.depth, number_of_junctions=self.junction, compression=self.compression_rate, type_of_block=self.type_of_block)
         else:
             x_y = Conv2DBNSLU(x_y_o, filters= filter_num_for_first_convlayer, kernel_size=kernel_size_for_first_convlayer, strides=stride_for_first_convlayer, activation=activation_for_first_convlayer, padding='same')
