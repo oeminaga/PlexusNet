@@ -215,6 +215,7 @@ class JunctionWeightLayer(Layer): # a junction layer
         b = b * self.W2
         v = self.func_junction([a,b])
         return v
+    '''
     def get_config(self):
         config = super(JunctionWeightLayer, self).get_config()
         config.update({
@@ -222,6 +223,7 @@ class JunctionWeightLayer(Layer): # a junction layer
             "W2": self.W2
         })
         return config
+    '''
 
 # Visualization utility functions
 np.set_printoptions(threshold=15, linewidth=80)
