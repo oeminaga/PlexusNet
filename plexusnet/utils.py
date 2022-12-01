@@ -194,12 +194,12 @@ class JunctionWeightLayer(Layer): # a junction layer
         input_shape describes the number of the junctions.
         '''
         assert isinstance(input_shape, list)
-        self.W1 = self.add_weight(#name='junction_weight_first_element', 
+        self.W1 = self.add_weight(name='junction_weight_first_element', 
                                       shape=(1,),
                                       initializer='uniform',
                                       trainable=True,
                                       constraint=min_max_norm(min_value=0, max_value=1))
-        self.W2 = self.add_weight(#name='junction_weight_second_element', 
+        self.W2 = self.add_weight(name='junction_weight_second_element', 
                                       shape=(1,),
                                       initializer='uniform',
                                       trainable=True,
