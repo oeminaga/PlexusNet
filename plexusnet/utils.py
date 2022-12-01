@@ -149,7 +149,7 @@ class RotationThetaWeightLayer(Layer): # a scaled layer
                                       trainable=True,
                                       constraint=min_max_norm(min_value=0.0, max_value=1.0))
         
-        super(RotationThetaWeightLayer, self).build(input_shape)
+        #super(RotationThetaWeightLayer, self).build(input_shape)
 
     def call(self, x):
         assert isinstance(x, list)
@@ -204,7 +204,7 @@ class JunctionWeightLayer(Layer): # a junction layer
                                       initializer='uniform',
                                       trainable=True,
                                       constraint=min_max_norm(min_value=0, max_value=1))
-        super(JunctionWeightLayer, self).build(input_shape)
+        #super(JunctionWeightLayer, self).build(input_shape)
 
     def call(self, x):
         assert isinstance(x, list)
