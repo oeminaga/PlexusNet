@@ -156,6 +156,7 @@ class RotationThetaWeightLayer(Layer): # a scaled layer
         a, b = x
 
         return K.cos(self.W1*90) * (-2) * K.exp(-(a**2+b**2)) + K.sin(self.W2*90) * (-2) * b * K.exp(-(a**2+b**2))
+    '''
     def get_config(self):
         config = super(RotationThetaWeightLayer, self).get_config()
         config.update({
@@ -163,6 +164,7 @@ class RotationThetaWeightLayer(Layer): # a scaled layer
             "W2": self.W2
         })
         return config
+    '''
 class RotationThetaWeightLayerCustomWeight(Layer): # a scaled layer
     def __init__(self, w1=0.09,w2=0.03, **kwargs):
         super(RotationThetaWeightLayerCustomWeight, self).__init__(**kwargs)
