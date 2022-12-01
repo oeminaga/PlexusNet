@@ -138,12 +138,12 @@ class RotationThetaWeightLayer(Layer): # a scaled layer
     def build(self, input_shape):
         assert isinstance(input_shape, list)
         
-        self.W1 = self.add_weight(name=f"{self.name}_kernel_01',
+        self.W1 = self.add_weight(name=f"{self.name}_kernel_01",
                                       shape=(1,),
                                       initializer='uniform',
                                       trainable=True,
                                       constraint=min_max_norm(min_value=0.0, max_value=1.0))
-        self.W2 = self.add_weight(name=f"{self.name}_kernel_02', 
+        self.W2 = self.add_weight(name=f"{self.name}_kernel_02", 
                                       shape=(1,),
                                       initializer='uniform',
                                       trainable=True,
