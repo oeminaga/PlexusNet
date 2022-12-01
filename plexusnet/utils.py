@@ -160,8 +160,7 @@ class RotationThetaWeightLayer(Layer): # a scaled layer
         config = super(RotationThetaWeightLayer, self).get_config()
         config.update({
             "W1": self.W1,
-            "W2": self.W2,
-            "name": self.name
+            "W2": self.W2
         })
         return config
 class RotationThetaWeightLayerCustomWeight(Layer): # a scaled layer
@@ -218,8 +217,7 @@ class JunctionWeightLayer(Layer): # a junction layer
         config = super(JunctionWeightLayer, self).get_config()
         config.update({
             "W1": self.W1,
-            "W2": self.W2,
-            "name": self.name
+            "W2": self.W2
         })
         return config
 
