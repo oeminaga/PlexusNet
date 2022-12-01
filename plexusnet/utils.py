@@ -156,7 +156,14 @@ class RotationThetaWeightLayer(Layer): # a scaled layer
         a, b = x
 
         return K.cos(self.W1*90) * (-2) * K.exp(-(a**2+b**2)) + K.sin(self.W2*90) * (-2) * b * K.exp(-(a**2+b**2))
-
+    def get_config(self):
+        config = super(RotationThetaWeightLayer, self).get_config()
+        config.update({
+            "W1": self.W1,
+            "W2": self.W2,
+            "name": self.name
+        })
+        return config
 class RotationThetaWeightLayerCustomWeight(Layer): # a scaled layer
     def __init__(self, w1=0.09,w2=0.03, **kwargs):
         super(RotationThetaWeightLayerCustomWeight, self).__init__(**kwargs)
@@ -207,6 +214,14 @@ class JunctionWeightLayer(Layer): # a junction layer
         b = b * self.W2
         v = self.func_junction([a,b])
         return v
+    def get_config(self):
+        config = super(JunctionWeightLayer, self).get_config()
+        config.update({
+            "W1": self.W1,
+            "W2": self.W2,
+            "name": self.name
+        })
+        return config
 
 # Visualization utility functions
 np.set_printoptions(threshold=15, linewidth=80)
