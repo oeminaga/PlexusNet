@@ -246,7 +246,7 @@ def LoadModel(filename, custom_objects={},optimizer= optimizers.Adam(), loss="ca
         custom_objects_internal[key]=custom_objects[key]
 
     model_=load_model(filename, custom_objects=custom_objects_internal, compile=False)
-    model_.compile(optimizer=optimizer, metrics=[""], loss=loss)
+    model_.compile(optimizer=optimizer, metrics=["acc"], loss=loss)
     return model_
 Configuration={}
 Configuration["num_heads"]=4
