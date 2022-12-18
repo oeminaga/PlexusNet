@@ -12,6 +12,75 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import pandas as pd
+class AttentionPooling(Layer):
+    """Applies attention to the patches extracted form the
+    trunk with the CLS token.
+
+    Args:
+        dimensions: The dimension of the whole architecture.
+        num_classes: The number of classes in the dataset.
+
+    Inputs:
+        Flattened patches from the trunk.
+
+    Outputs:
+        The modifies CLS token.
+    """
+
+    def __init__(self, dimensions, num_classes, **kwargs):
+        super().__init__(**kwargs)
+        self.dimensions = dimensions
+        self.num_classes = num_classes
+        self.cls = tf.Variable(tf.zeros((1, 1, dimensions)))
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "dimensions": self.dimensions,
+                "num_classes": self.num_classes,
+                "cls": self.cls.numpy(),
+            }
+        )
+        return config
+
+    def build(self, input_shape):
+        self.attention = layers.MultiHeadAttention(
+            num_heads=1, key_dim=self.dimensions, dropout=0.2,
+        )
+        self.layer_norm1 = layers.LayerNormalization(epsilon=1e-6)
+        self.layer_norm2 = layers.LayerNormalization(epsilon=1e-6)
+        self.layer_norm3 = layers.LayerNormalization(epsilon=1e-6)
+        self.mlp = keras.Sequential(
+            [
+                layers.Dense(units=self.dimensions, activation=tf.nn.gelu),
+                layers.Dropout(0.2),
+                layers.Dense(units=self.dimensions, activation=tf.nn.gelu),
+            ]
+        )
+        self.dense = layers.Dense(units=self.num_classes)
+        self.flatten = layers.Flatten()
+
+    def call(self, x):
+        batch_size = tf.shape(x)[0]
+        # Expand the class token batch number of times.
+        class_token = tf.repeat(self.cls, repeats=batch_size, axis=0)
+        # Concat the input with the trainable class token.
+        x = tf.concat([class_token, x], axis=1)
+        # Apply attention to x.
+        x = self.layer_norm1(x)
+        x, viz_weights = self.attention(
+            query=x[:, 0:1], key=x, value=x, return_attention_scores=True
+        )
+        class_token = class_token + x
+        class_token = self.layer_norm2(class_token)
+        class_token = self.flatten(class_token)
+        class_token = self.layer_norm3(class_token)
+        class_token = class_token + self.mlp(class_token)
+        # Build the logits
+        logits = self.dense(class_token)
+        return logits, tf.squeeze(viz_weights)[..., 1:]
+
 class StochasticDepth(layers.Layer):
     """Stochastic Depth module.
     It performs batch-wise dropping rather than sample-wise. In libraries like
