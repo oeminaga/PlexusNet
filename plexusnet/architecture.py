@@ -912,7 +912,7 @@ class PlexusNet():
         if self.AttentionPooling:
             dense_shape = y.shape.as_list()
             y=layers.Reshape((dense_shape[1]*dense_shape[2],dense_shape[-1]))(y) #y
-            y,_ =utils.AttentionPooling(dimensions=dense_shape[-1],num_classes=self.n_class)(y)
+            y,_ =utils.AttentionPooling(dimensions=dense_shape[-1],num_classes=self.n_class, acitvation=self.final_activation)(y)
             return y
         #FC: You can change here whatever you want.
         if self.get_last_conv:
@@ -926,7 +926,7 @@ class PlexusNet():
         elif self.GlobalPooling=="att":
             dense_shape = y.shape.as_list()
             y=layers.Reshape((dense_shape[1]*dense_shape[2],dense_shape[-1]))(y) #y
-            y,_ =utils.AttentionPooling(dimensions=dense_shape[-1],num_classes=self.n_class)(y)
+            y,_ =utils.AttentionPooling(dimensions=dense_shape[-1],num_classes=self.n_class,acitvation=self.final_activation)(y)
             return y
 
 
