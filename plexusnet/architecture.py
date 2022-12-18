@@ -345,9 +345,10 @@ class PlexusNet():
         length (Default: 2)
         depth (Default: 7)
         junction (Default: 3)
+        type_of_block (Default: inception, available: inception, inception_gelu, convnext, bayesian_inception, resnet, resnet_gelu,vgg, vgg_gelu,vgg_short, soft_att_all,soft_att_all_gelu,soft_att)
         Multiple configurations are available
+        
         You can modify or search the optimal architecture using these hyperparameters. Please be advised that the training set should be representative of different variation to build sophisticated models.
-
         """
         #policy = mixed_precision.Policy('mixed_float16')
         #mixed_precision.set_policy(policy)
