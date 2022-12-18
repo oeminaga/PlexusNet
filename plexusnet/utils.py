@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import pandas as pd
-class AttentionPooling(Layer):
+class AttentionPooling(layers.Layer):
     """Applies attention to the patches extracted form the
     trunk with the CLS token.
 
