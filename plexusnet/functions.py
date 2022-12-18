@@ -96,6 +96,47 @@ def identity_block(input_tensor, kernel_size, filters, stage, block,kernel_initi
     x = layers.add([x, input_tensor])
     x = layers.LeakyReLU()(x)
     return x
+def identity_block_gelu(input_tensor, kernel_size, filters, stage, block,kernel_initializer="he_normal", seed=0):
+    """
+    The identity block is the block that has no conv layer at shortcut.
+    # Arguments
+        input_tensor: input tensor
+        kernel_size: default 3, the kernel size of
+            middle conv layer at main path
+        filters: list of integers, the filters of 3 conv layer at main path
+        stage: integer, current stage label, used for generating layer names
+        block: 'a','b'..., current block label, used for generating layer names
+    # Returns
+        Output tensor for the block.
+    """
+    filters1, filters2, filters3 = filters
+    if K.image_data_format() == 'channels_last':
+        bn_axis = 3
+    else:
+        bn_axis = 1
+    #conv_name_base = 'res' + str(stage) + block + '_branch'
+    #bn_name_base = 'bn' + str(stage) + block + '_branch'
+
+    x = layers.Conv2D(filters1, (1, 1),
+                      kernel_initializer=initializers.he_normal(seed=seed+1)
+                      )(input_tensor)
+    x = layers.LayerNormalization(axis=bn_axis)(x)
+    x = layers.Activation(tf.keras.activations.gelu)(x)
+
+    x = layers.Conv2D(filters2, kernel_size,
+                      padding='same',
+                      kernel_initializer=initializers.he_normal(seed=seed+2)
+                      )(x)
+    x = layers.LayerNormalization(axis=bn_axis)(x)
+    x = layers.Activation(tf.keras.activations.gelu)(x)
+
+    x = layers.Conv2D(filters3, (1, 1),
+                      kernel_initializer=initializers.he_normal(seed=seed+3))(x)
+    x = layers.LayerNormalization(axis=bn_axis)(x)
+
+    x = layers.add([x, input_tensor])
+    x = layers.Activation(tf.keras.activations.gelu)(x)
+    return x
 
 def conv_block(input_tensor,
                kernel_size,
@@ -146,4 +187,68 @@ def conv_block(input_tensor,
 
     x = layers.add([x, shortcut])
     x = layers.LeakyReLU()(x)
+    return x
+
+def conv_block_gelu(input_tensor,
+               kernel_size,
+               filters,
+               stage,
+               block,
+               strides=(2, 2),seed=0):
+    """A block that has a conv layer at shortcut.
+    # Arguments
+        input_tensor: input tensor
+        kernel_size: default 3, the kernel size of
+            middle conv layer at main path
+        filters: list of integers, the filters of 3 conv layer at main path
+        stage: integer, current stage label, used for generating layer names
+        block: 'a','b'..., current block label, used for generating layer names
+        strides: Strides for the first conv layer in the block.
+    # Returns
+        Output tensor for the block.
+    Note that from stage 3,
+    the first conv layer at main path is with strides=(2, 2)
+    And the shortcut should have strides=(2, 2) as well
+    """
+    filters1, filters2, filters3 = filters
+    if K.image_data_format() == 'channels_last':
+        bn_axis = 3
+    else:
+        bn_axis = 1
+    
+    x = layers.Conv2D(filters1, (1, 1), strides=strides,
+                      kernel_initializer=initializers.he_uniform(seed=seed+8)
+                      )(input_tensor)
+    x = tf.keras.layers.LayerNormalization(axis=bn_axis)(x)
+    x = layers.Activation(tf.keras.activations.gelu)(x)
+
+    x = layers.Conv2D(filters2, kernel_size, padding='same',
+                      kernel_initializer=initializers.he_uniform(seed=seed+8))(x)
+    x = layers.LayerNormalization(axis=bn_axis)(x)
+    x = layers.Activation(tf.keras.activations.gelu)(x)
+
+    x = layers.Conv2D(filters3, (1, 1),
+                      kernel_initializer=initializers.he_uniform(seed=seed+8))(x)
+    x = tf.keras.layers.GroupNormalization(
+    groups=4,
+    axis=bn_axis,
+    epsilon=0.001,
+    center=True,
+    scale=True,
+    beta_initializer="zeros",
+    gamma_initializer="ones")(x)
+
+    shortcut = layers.Conv2D(filters3, (1, 1), strides=strides,
+                             kernel_initializer=initializers.he_uniform(seed=seed+8))(input_tensor)
+    shortcut =     x = tf.keras.layers.GroupNormalization(
+    groups=4,
+    axis=bn_axis,
+    epsilon=0.001,
+    center=True,
+    scale=True,
+    beta_initializer="zeros",
+    gamma_initializer="ones")(shortcut)
+
+    x = layers.add([x, shortcut])
+    x = layers.Activation(tf.keras.activations.gelu)(x)
     return x
