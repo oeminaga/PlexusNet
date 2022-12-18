@@ -923,6 +923,12 @@ class PlexusNet():
             y = layers.GlobalMaxPooling2D()(y)
         elif self.GlobalPooling=="avg":
             y = layers.GlobalAveragePooling2D()(y)
+        elif self.GlobalPooling=="att":
+            dense_shape = y.shape.as_list()
+            y=layers.Reshape((dense_shape[1]*dense_shape[2],dense_shape[-1]))(y) #y
+            y,_ =utils.AttentionPooling(dimensions=dense_shape[-1],num_classes=self.n_class)(y)
+            return y
+
 
         #Supervised-Contrastive-Learning
         if self.SCL:
