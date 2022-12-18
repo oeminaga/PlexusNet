@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import math
 import pandas as pd
 import keras
-class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
+class WarmUpCosine(tf.keras.optimizers.schedules.LearningRateSchedule):
     def __init__(
         self, learning_rate_base, total_steps, warmup_learning_rate, warmup_steps
     ):
