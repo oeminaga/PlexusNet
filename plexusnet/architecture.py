@@ -913,9 +913,7 @@ class PlexusNet():
             dense_shape = y.shape.as_list()
             y=layers.Reshape((dense_shape[1]*dense_shape[2],dense_shape[-1]))(y) #y
             y,_ =utils.AttentionPooling(dimensions=dense_shape[-1],num_classes=self.n_class)(y)
-            y = layers.Activation(self.final_activation)(y)
-            y = layers.Flatten()(y)
-            return y 
+            return y
         #FC: You can change here whatever you want.
         if self.get_last_conv:
             return y

@@ -64,10 +64,11 @@ class AttentionPooling(layers.Layer):
         The modifies CLS token.
     """
 
-    def __init__(self, dimensions, num_classes, **kwargs):
+    def __init__(self, dimensions, num_classes, acitvation=None,**kwargs):
         super().__init__(**kwargs)
         self.dimensions = dimensions
         self.num_classes = num_classes
+        self.acitvation=acitvation
         self.cls = tf.Variable(tf.zeros((1, 1, dimensions)))
 
     def get_config(self):
@@ -77,6 +78,7 @@ class AttentionPooling(layers.Layer):
                 "dimensions": self.dimensions,
                 "num_classes": self.num_classes,
                 "cls": self.cls.numpy(),
+                "activation": self.acitvation,
             }
         )
         return config
@@ -95,7 +97,7 @@ class AttentionPooling(layers.Layer):
                 layers.Dense(units=self.dimensions, activation=tf.nn.gelu),
             ]
         )
-        self.dense = layers.Dense(units=self.num_classes)
+        self.dense = layers.Dense(units=self.num_classes,activation=self.acitvation)
         self.flatten = layers.Flatten()
 
     def call(self, x):
