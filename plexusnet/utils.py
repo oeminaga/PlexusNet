@@ -69,7 +69,7 @@ class AttentionPooling(layers.Layer):
         self.dimensions = dimensions
         self.num_classes = num_classes
         self.acitvation=acitvation
-        self.cls = tf.Variable(tf.zeros((1, 1, dimensions)))
+        self.cls_token = tf.Variable(tf.zeros((1, 1, dimensions)))
 
     def get_config(self):
         config = super().get_config()
@@ -77,7 +77,7 @@ class AttentionPooling(layers.Layer):
             {
                 "dimensions": self.dimensions,
                 "num_classes": self.num_classes,
-                "cls": self.cls,
+                "cls_token": self.cls_token,
                 "activation": self.acitvation,
             }
         )
@@ -103,7 +103,7 @@ class AttentionPooling(layers.Layer):
     def call(self, x):
         batch_size = tf.shape(x)[0]
         # Expand the class token batch number of times.
-        class_token = tf.repeat(self.cls, repeats=batch_size, axis=0)
+        class_token = tf.repeat(self.cls_token, repeats=batch_size, axis=0)
         # Concat the input with the trainable class token.
         x = tf.concat([class_token, x], axis=1)
         # Apply attention to x.
