@@ -77,7 +77,7 @@ class AttentionPooling(layers.Layer):
             {
                 "dimensions": self.dimensions,
                 "num_classes": self.num_classes,
-                "cls_token": self.cls_token,
+                "cls_token": self.cls_token.numpy(),
                 "activation": self.acitvation,
             }
         )
