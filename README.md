@@ -26,6 +26,10 @@ from plexusnet.architecture import LoadModel
 model=LoadModel("your_model.h5")
 model.predict(X)
 ```
+
+- For NAS, example codes are provided:
+[Grid search] (https://github.com/oeminaga/PlexusNet/blob/master/Example_Cifar_PleuxsNET-GridSearch.ipynb)
+
 <red><br> Please exclude h5 in the filename if you want to save the model during training with TF version >2.8 to avoid the model saving errors! <br></red>
 
 <br><b>Please cite, when you use this package:</b></br>
