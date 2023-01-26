@@ -13,15 +13,15 @@ import plexusnet
 seed_everything()
 ```
 
-#An example code to use the package: 
+-An example code to use the package: 
 ```
 from plexusnet.architecture import PlexusNet
 model=PlexusNet(depth=2, length=3, junction=3, n_class=2).model
 
 model.compile(optimizer="adam", metrics=["acc"], loss="categorical_crossentropy")
-model.fit(X,Y)<br />
+model.fit(X,Y)
 ```
-#if you want to load a PlexusNet model for prediction:
+-if you want to load a PlexusNet model for prediction:
 ```
 from plexusnet.architecture import LoadModel
 model=LoadModel("your_model.h5")
