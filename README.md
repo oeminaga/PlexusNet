@@ -34,7 +34,7 @@ model.predict(X)
 -- Random search</br> (https://github.com/oeminaga/PlexusNet/blob/master/Example_Cifar_PleuxsNET_RandomSearch.ipynb)</br>
 
 <br> Please exclude h5 in the filename if you want to save the model during training with TF version >2.8 to avoid the model saving errors! <br>
-<br> Please exclude the option "save weight only" to avoid errors in load the model. Instead, save the whole model during model training.
+<br> Please exclude the option "save weight only" to avoid errors when you wanted to load the model. Instead, save the whole model during model training.
 
 <br> Bayesian block is now added (bayesian_inception). </br> 
 <br><b>Please cite, when you use this package:</b></br>
