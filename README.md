@@ -21,8 +21,10 @@ model.fit(X,Y)<br />
 #if you want to load a PlexusNet model:
 
 from plexusnet.architecture import LoadModel<br />
-model=LoadModel("your_model.h5") #Only TF 2.8. Any version above 2.8, please exclude .h5 <br />
+model=LoadModel("your_model.h5")
 model.predict(X)<br />
+
+<br> Please exclude h5 if you want to save the model during training with TF version >2.8, 
 
 <br><b>Please cite, when you use this package:</b></br>
 O. Eminaga, M. Abbas, J. Shen, M. Laurie, J.D. Brooks, J.C. Liao, D.L.
