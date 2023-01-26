@@ -33,8 +33,9 @@ model.predict(X)
 -- Hyperband (https://github.com/oeminaga/PlexusNet/blob/master/Example_Cifar_PleuxsNET_Hyperband.ipynb)</br>
 -- Random search (https://github.com/oeminaga/PlexusNet/blob/master/Example_Cifar_PleuxsNET_RandomSearch.ipynb)</br>
 
-<red><br> Please exclude h5 in the filename if you want to save the model during training with TF version >2.8 to avoid the model saving errors! <br></red>
+<br> Please exclude h5 in the filename if you want to save the model during training with TF version >2.8 to avoid the model saving errors! <br>
 
+<br> Bayesian convolutional neural network architecture is also supported </br> 
 <br><b>Please cite, when you use this package:</b></br>
 O. Eminaga, M. Abbas, J. Shen, M. Laurie, J.D. Brooks, J.C. Liao, D.L.
 Rubin, PlexusNet: A neural network architectural concept for medical image classification, Computers in
