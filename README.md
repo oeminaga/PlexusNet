@@ -1,5 +1,4 @@
-# PlexusNet
-PlexusNet for medical imaging.
+# PlexusNet: A neural network architectural concept for medical image classification
 
 This package was built on the Keras framework and easily allows using the PlexusNet architecture for research projects.
 
