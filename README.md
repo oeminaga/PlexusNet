@@ -26,7 +26,7 @@ from plexusnet.architecture import LoadModel
 model=LoadModel("your_model.h5")
 model.predict(X)
 ```
-<red><br> Please exclude h5 if you want to save the model during training with TF version >2.8! <br></red>
+<red><br> Please exclude h5 in the filename if you want to save the model during training with TF version >2.8 to avoid the model saving errors! <br></red>
 
 <br><b>Please cite, when you use this package:</b></br>
 O. Eminaga, M. Abbas, J. Shen, M. Laurie, J.D. Brooks, J.C. Liao, D.L.
