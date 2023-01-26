@@ -28,10 +28,10 @@ model.predict(X)
 ```
 
 - For NAS, example codes are provided:</br>
--- Grid search (https://github.com/oeminaga/PlexusNet/blob/master/Example_Cifar_PleuxsNET-GridSearch.ipynb)</br>
--- Bayesian Optimization (https://github.com/oeminaga/PlexusNet/blob/master/Example_Cifar_PleuxsNET_BayesianOptimization.ipynb)</br>
--- Hyperband (https://github.com/oeminaga/PlexusNet/blob/master/Example_Cifar_PleuxsNET_Hyperband.ipynb)</br>
--- Random search (https://github.com/oeminaga/PlexusNet/blob/master/Example_Cifar_PleuxsNET_RandomSearch.ipynb)</br>
+-- Grid search</br>(https://github.com/oeminaga/PlexusNet/blob/master/Example_Cifar_PleuxsNET-GridSearch.ipynb)</br>
+-- Bayesian Optimization</br> (https://github.com/oeminaga/PlexusNet/blob/master/Example_Cifar_PleuxsNET_BayesianOptimization.ipynb)</br>
+-- Hyperband</br> (https://github.com/oeminaga/PlexusNet/blob/master/Example_Cifar_PleuxsNET_Hyperband.ipynb)</br>
+-- Random search</br> (https://github.com/oeminaga/PlexusNet/blob/master/Example_Cifar_PleuxsNET_RandomSearch.ipynb)</br>
 
 <br> Please exclude h5 in the filename if you want to save the model during training with TF version >2.8 to avoid the model saving errors! <br>
 
