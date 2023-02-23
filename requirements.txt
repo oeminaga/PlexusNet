@@ -1,1 +1,9 @@
 keras>=2.2.2
+tensorflow
+tensorflow-addons
+tensorflow-probability
+seaborn
+joblib
+scikit-learn
+opencv-python
+pyaml
