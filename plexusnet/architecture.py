@@ -785,7 +785,7 @@ class PlexusNet():
         nodes_ = np.array(nodes*depth)
         depth_ = np.array(depth_lst*(number_of_nodes-1))
         counter = np.array(counter)
-        np_ = np.zeros((((number_of_nodes-1)*depth),3), dtype=np.int)
+        np_ = np.zeros((((number_of_nodes-1)*depth),3), dtype=int)
 
         np_[...,0] = nodes_
         np_[...,1] = depth_
@@ -928,7 +928,9 @@ class PlexusNet():
             y=layers.Reshape((dense_shape[1]*dense_shape[2],dense_shape[-1]))(y) #y
             y,_ =utils.AttentionPooling(dimensions=dense_shape[-1],num_classes=self.n_class,acitvation=self.final_activation)(y)
             return y
-
+        elif self.GlobalPooling=="local_avg_flatten":
+            y = layers.AveragePooling2D((4, 4), strides=(4, 4))(y)
+            y = layers.Flatten()(y)
 
         #Supervised-Contrastive-Learning
         if self.SCL:
