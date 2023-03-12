@@ -926,7 +926,7 @@ class PlexusNet():
         elif self.GlobalPooling=="att":
             dense_shape = y.shape.as_list()
             y=layers.Reshape((dense_shape[1]*dense_shape[2],dense_shape[-1]))(y) #y
-            y,_ =utils.AttentionPooling(dimensions=dense_shape[-1],num_classes=self.n_class,acitvation=self.final_activation)(y)
+            y,_ =utils.AttentionPooling(dimensions=dense_shape[-1],num_classes=self.n_class,activation=self.final_activation)(y)
             return y
         elif self.GlobalPooling=="local_avg_flatten":
             y = layers.AveragePooling2D((4, 4), strides=(4, 4))(y)
