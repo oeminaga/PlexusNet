@@ -27,7 +27,7 @@ model=LoadModel("your_model.h5")
 model.predict(X)
 ```
 
-- For NAS, example codes are provided:</br>
+- For NAS (only epoch for each model configuration), example codes are provided:</br>
 -- Grid search</br>(https://github.com/oeminaga/PlexusNet/blob/master/Example_Cifar_PleuxsNET-GridSearch.ipynb)</br>
 -- Bayesian Optimization</br> (https://github.com/oeminaga/PlexusNet/blob/master/Example_Cifar_PleuxsNET_BayesianOptimization.ipynb)</br>
 -- Hyperband</br> (https://github.com/oeminaga/PlexusNet/blob/master/Example_Cifar_PleuxsNET_Hyperband.ipynb)</br>
