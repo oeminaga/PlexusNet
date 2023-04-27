@@ -4,7 +4,7 @@ This package was built on the Keras framework and easily allows using the Plexus
 
 - To Install: 
 ```pip3 install git+https://github.com/oeminaga/PlexusNet.git``` <br />
-- Please install tensorflow, tensorflow_addons and tensorflow_probability before using this package or use requirements.txt. <br />
+- Please install tensorflow, tensorflow_addons and tensorflow_probability before using this package or use requirements.txt before starting with install. <br />
 ```
 pip install -r requirements.txt
 ```
