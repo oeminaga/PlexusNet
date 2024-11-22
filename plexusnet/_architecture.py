@@ -26,7 +26,10 @@ from .functions import *
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-import tensorflow_addons as tfa
+try:
+    import tensorflow_addons as tfa
+except:
+    print("tensorflow_addons ignored")
 import numpy as np
 try:
     import tensorflow_probability as tfp
