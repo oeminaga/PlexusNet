@@ -967,7 +967,7 @@ class PlexusNet():
             return y
         if not self.escape_fc1:
             if self.ApplyTransformer:
-                y = layers.Dense(dense_shape, activation=tfa.activations.gelu)(y)
+                y = layers.Dense(dense_shape, activation=tf.keras.activations.gelu)(y)
             else:
                 y = layers.Dense(dense_shape, activation=self.fc1_activation)(y)
         y = layers.Dense(self.n_class, activation=self.final_activation)(y)
@@ -1225,6 +1225,7 @@ class UnitNormLayer(layers.Layer):
         norm = tf.norm(input_tensor, axis=1)
         return input_tensor / tf.reshape(norm, [-1, 1])
 
+"""
 class SupervisedContrastiveLoss(tf.keras.losses.Loss):
     def __init__(self, temperature=1, name=None):
         super(SupervisedContrastiveLoss, self).__init__(name=name)
@@ -1240,6 +1241,7 @@ class SupervisedContrastiveLoss(tf.keras.losses.Loss):
             ),
             self.temperature,)
         return tfa.losses.npairs_loss(tf.squeeze(labels), logits)
+"""
 class Distiller(tf.keras.Model):
     def __init__(self, student, teacher):
         super(Distiller, self).__init__()
